@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RapidTriage - Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb59b",
+                    "on-primary-fixed": "#001848",
+                    "on-secondary-fixed-variant": "#004786",
+                    "on-tertiary-fixed-variant": "#812800",
+                    "surface-bright": "#fdf8fd",
+                    "on-secondary-container": "#003567",
+                    "primary-container": "#0052cc",
+                    "on-primary-fixed-variant": "#0040a2",
+                    "inverse-primary": "#b2c5ff",
+                    "primary": "#003d9b",
+                    "surface": "#fdf8fd",
+                    "on-tertiary-fixed": "#380d00",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#f1ecf2",
+                    "surface-container-highest": "#e5e1e7",
+                    "primary-fixed-dim": "#b2c5ff",
+                    "surface-dim": "#ddd9de",
+                    "background": "#fdf8fd",
+                    "on-surface": "#1c1b1f",
+                    "surface-tint": "#0c56d0",
+                    "secondary-fixed": "#d4e3ff",
+                    "secondary-container": "#54a0fe",
+                    "outline": "#737685",
+                    "on-surface-variant": "#434654",
+                    "on-secondary-fixed": "#001c3a",
+                    "surface-container-high": "#ebe7ec",
+                    "on-background": "#1c1b1f",
+                    "surface-container-low": "#f7f2f8",
+                    "surface-variant": "#e5e1e7",
+                    "primary-fixed": "#dae2ff",
+                    "inverse-on-surface": "#f4eff5",
+                    "tertiary": "#7b2600",
+                    "on-tertiary-container": "#ffc6b2",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed": "#ffdbcf",
+                    "error": "#ba1a1a",
+                    "outline-variant": "#c3c6d6",
+                    "inverse-surface": "#313034",
+                    "tertiary-container": "#a33500",
+                    "on-error-container": "#93000a",
+                    "on-secondary": "#ffffff",
+                    "secondary": "#005faf",
+                    "secondary-fixed-dim": "#a5c8ff",
+                    "on-primary-container": "#c4d2ff",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "margin-mobile": "16px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "sm": "8px",
+                    "xl": "32px",
+                    "touch-target-min": "48px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "margin-tablet": "24px"
+            },
+            "fontFamily": {
+                    "title-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "label-lg": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500"}],
+                    "headline-sm": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "700"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                    "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .settings-list-item {
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+        }
+        .ios-toggle {
+            appearance: none;
+            width: 52px;
+            height: 32px;
+            background: #e5e1e7;
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .ios-toggle:checked { background: #003d9b; }
+        .ios-toggle::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 12px;
+            transition: transform 0.2s ease;
+        }
+        .ios-toggle:checked::after { transform: translateX(20px); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface">
+<!-- Top AppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface shadow-sm flex justify-between items-center px-margin-mobile h-touch-target-min">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="emergency">emergency</span>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">RapidTriage</h1>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high transition-colors p-sm rounded-full" data-icon="cloud_sync">cloud_sync</button>
+</header>
+<main class="pt-[56px] pb-[120px] max-w-2xl mx-auto px-margin-mobile">
+<div class="py-lg">
+<h2 class="font-headline-md text-headline-md mb-lg">Settings</h2>
+<!-- Profile Section -->
+<section class="mb-xl">
+<div class="flex items-center gap-md p-md bg-surface-container-low rounded-xl mb-md border border-outline-variant">
+<div class="w-16 h-16 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional close-up studio portrait of a paramedic in a dark navy blue uniform. The lighting is crisp and clinical with a clean, light gray background, following a modern corporate aesthetic. The subject has a serious yet calm expression, conveying expertise and authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkrUavgTbuhjrCWOunhpY_fft8UGRGpE95GZyAp65h8LRshRe3rXakA8dxNgPRN_H1w6lMpFYVW0AgjwQTKHoY75L5HxJmfolqDg9LIkblbx1TQbo4Tb61aretdYLM4o6Aud4FRnozi9wwGXFkDj8zzyu40BAmTUpNskEwtc8vtayR8I7PJ5cawA_cMbOw6kvp-1furdf7cDqx2GMXzT1ZR_3IacD2Pq-41yrwPlgAKt_ar9ZyuOF8tVRebLCsr7JlvOueihwPzkH7"/>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg">James Wilson</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Senior Lead Paramedic</p>
+<p class="font-label-md text-label-md text-primary mt-xs">Badge #PR-4492</p>
+</div>
+<button class="ml-auto material-symbols-outlined text-on-surface-variant" data-icon="edit">edit</button>
+</div>
+</section>
+<!-- Hospital / Location Section -->
+<section class="mb-lg">
+<p class="font-label-lg text-label-lg text-primary mb-sm px-sm">Organization</p>
+<div class="bg-surface rounded-xl overflow-hidden border border-outline-variant">
+<div class="settings-list-item hover:bg-surface-container-high transition-colors border-b border-outline-variant">
+<span class="material-symbols-outlined mr-md text-on-surface-variant" data-icon="hospital">festival</span>
+<div class="flex-1">
+<p class="font-body-lg text-body-lg">Assigned Hospital</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Central Metropolitan Trauma Center</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="settings-list-item hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined mr-md text-on-surface-variant" data-icon="badge">badge</span>
+<div class="flex-1">
+<p class="font-body-lg text-body-lg">System Access Permissions</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Level 3 Admin Access</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="lock">lock</span>
+</div>
+</div>
+</section>
+<!-- Preferences Section -->
+<section class="mb-lg">
+<p class="font-label-lg text-label-lg text-primary mb-sm px-sm">Preferences</p>
+<div class="bg-surface rounded-xl overflow-hidden border border-outline-variant">
+<div class="settings-list-item border-b border-outline-variant">
+<span class="material-symbols-outlined mr-md text-on-surface-variant" data-icon="dark_mode">dark_mode</span>
+<p class="font-body-lg text-body-lg flex-1">Dark Mode</p>
+<input class="ios-toggle" id="dark-mode-toggle" type="checkbox"/>
+</div>
+<div class="settings-list-item hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined mr-md text-on-surface-variant" data-icon="language">language</span>
+<div class="flex-1">
+<p class="font-body-lg text-body-lg">System Language</p>
+<p class="font-body-md text-body-md text-on-surface-variant">English (US)</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</section>
+<!-- Hardware Section -->
+<section class="mb-lg">
+<p class="font-label-lg text-label-lg text-primary mb-sm px-sm">Hardware Integrations</p>
+<div class="bg-surface rounded-xl overflow-hidden border border-outline-variant">
+<div class="settings-list-item border-b border-outline-variant">
+<span class="material-symbols-outlined mr-md text-on-surface-variant" data-icon="location_on">location_on</span>
+<p class="font-body-lg text-body-lg flex-1">GPS Tracking</p>
+<input checked="" class="ios-toggle" type="checkbox"/>
+</div>
+<div class="settings-list-item">
+<span class="material-symbols-outlined mr-md text-on-surface-variant" data-icon="nfc">nfc</span>
+<p class="font-body-lg text-body-lg flex-1">NFC Bracelet Scanning</p>
+<input checked="" class="ios-toggle" type="checkbox"/>
+</div>
+</div>
+</section>
+<!-- Syncing Section -->
+<section class="mb-lg">
+<p class="font-label-lg text-label-lg text-primary mb-sm px-sm">Data &amp; Synchronization</p>
+<div class="bg-surface rounded-xl overflow-hidden border border-outline-variant">
+<div class="settings-list-item border-b border-outline-variant">
+<span class="material-symbols-outlined mr-md text-on-surface-variant" data-icon="sync">sync</span>
+<p class="font-body-lg text-body-lg flex-1">Background Auto-sync</p>
+<input checked="" class="ios-toggle" type="checkbox"/>
+</div>
+<div class="settings-list-item">
+<span class="material-symbols-outlined mr-md text-on-surface-variant" data-icon="wifi">wifi</span>
+<p class="font-body-lg text-body-lg flex-1">Sync over WiFi only</p>
+<input class="ios-toggle" type="checkbox"/>
+</div>
+</div>
+</section>
+<!-- Storage Section -->
+<section class="mb-lg">
+<p class="font-label-lg text-label-lg text-primary mb-sm px-sm">Device Storage</p>
+<div class="bg-surface rounded-xl overflow-hidden border border-outline-variant">
+<button class="settings-list-item w-full text-left hover:bg-surface-container-high transition-colors border-b border-outline-variant">
+<span class="material-symbols-outlined mr-md text-on-surface-variant" data-icon="download">download</span>
+<p class="font-body-lg text-body-lg flex-1">Export Offline Logs (.csv)</p>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="arrow_outward">arrow_outward</span>
+</button>
+<button class="settings-list-item w-full text-left hover:bg-surface-container-high transition-colors group">
+<span class="material-symbols-outlined mr-md text-error" data-icon="delete_sweep">delete_sweep</span>
+<p class="font-body-lg text-body-lg flex-1 text-error">Clear Local Cache</p>
+<p class="font-label-md text-label-md text-on-surface-variant mr-sm">124 MB</p>
+</button>
+</div>
+</section>
+<!-- Footer/Logout -->
+<footer class="mt-xl flex flex-col items-center gap-md py-lg">
+<button class="w-full py-md bg-error-container text-on-error-container rounded-full font-title-md text-title-md flex items-center justify-center gap-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                    Logout
+                </button>
+<div class="text-center">
+<p class="font-label-md text-label-md text-on-surface-variant">RapidTriage Emergency Protocol Suite</p>
+<p class="font-label-md text-label-md text-on-surface-variant opacity-70">Version 4.12.0 (Build 8829)</p>
+</div>
+</footer>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-xs pb-sm pt-xs bg-surface-container shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span class="font-label-md text-label-md">Queue</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-md text-label-md">History</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<script>
+        // Simple micro-interaction for Dark Mode toggle
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        darkModeToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.documentElement.classList.add('dark');
+                // Adjust colors for dark mode context manually if needed beyond tailwind classes
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Add touch interactions
+        document.querySelectorAll('.settings-list-item, button').forEach(el => {
+            el.addEventListener('touchstart', () => {
+                el.style.opacity = '0.7';
+            });
+            el.addEventListener('touchend', () => {
+                el.style.opacity = '1';
+            });
+        });
+    </script>
+</body></html>

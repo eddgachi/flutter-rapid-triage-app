@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RapidTriage | Mission-Critical Field Triage</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-fixed-dim": "#ffb59b",
+                      "on-primary-fixed": "#001848",
+                      "on-secondary-fixed-variant": "#004786",
+                      "on-tertiary-fixed-variant": "#812800",
+                      "surface-bright": "#fdf8fd",
+                      "on-secondary-container": "#003567",
+                      "primary-container": "#0052cc",
+                      "on-primary-fixed-variant": "#0040a2",
+                      "inverse-primary": "#b2c5ff",
+                      "primary": "#003d9b",
+                      "surface": "#fdf8fd",
+                      "on-tertiary-fixed": "#380d00",
+                      "on-primary": "#ffffff",
+                      "surface-container": "#f1ecf2",
+                      "surface-container-highest": "#e5e1e7",
+                      "primary-fixed-dim": "#b2c5ff",
+                      "surface-dim": "#ddd9de",
+                      "background": "#fdf8fd",
+                      "on-surface": "#1c1b1f",
+                      "surface-tint": "#0c56d0",
+                      "secondary-fixed": "#d4e3ff",
+                      "secondary-container": "#54a0fe",
+                      "outline": "#737685",
+                      "on-surface-variant": "#434654",
+                      "on-secondary-fixed": "#001c3a",
+                      "surface-container-high": "#ebe7ec",
+                      "on-background": "#1c1b1f",
+                      "surface-container-low": "#f7f2f8",
+                      "surface-variant": "#e5e1e7",
+                      "primary-fixed": "#dae2ff",
+                      "inverse-on-surface": "#f4eff5",
+                      "tertiary": "#7b2600",
+                      "on-tertiary-container": "#ffc6b2",
+                      "error-container": "#ffdad6",
+                      "tertiary-fixed": "#ffdbcf",
+                      "error": "#ba1a1a",
+                      "outline-variant": "#c3c6d6",
+                      "inverse-surface": "#313034",
+                      "tertiary-container": "#a33500",
+                      "on-error-container": "#93000a",
+                      "on-secondary": "#ffffff",
+                      "secondary": "#005faf",
+                      "secondary-fixed-dim": "#a5c8ff",
+                      "on-primary-container": "#c4d2ff",
+                      "on-error": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "margin-mobile": "16px",
+                      "lg": "24px",
+                      "xs": "4px",
+                      "sm": "8px",
+                      "xl": "32px",
+                      "touch-target-min": "48px",
+                      "gutter": "16px",
+                      "md": "16px",
+                      "margin-tablet": "24px"
+              },
+              "fontFamily": {
+                      "title-md": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "label-lg": ["Inter"],
+                      "headline-sm": ["Inter"],
+                      "title-lg": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                      "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500"}],
+                      "headline-sm": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "700"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                      "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+        }
+        /* Custom medical pattern background */
+        .medical-grid {
+            background-image: radial-gradient(circle at 2px 2px, rgba(0, 61, 155, 0.05) 1px, transparent 0);
+            background-size: 32px 32px;
+        }
+        /* Fade-in animations */
+        .animate-fade-up {
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-fade-in {
+            animation: fadeIn 1.2s ease-out forwards;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        /* Progress loader animation */
+        .loader-ring {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e5e1e7;
+            border-top: 3px solid #003d9b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .logo-glow {
+            filter: drop-shadow(0 0 15px rgba(0, 82, 204, 0.2));
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface flex flex-col items-center justify-center min-h-screen relative overflow-hidden">
+<!-- Subtle Medical Background Layers -->
+<div class="absolute inset-0 medical-grid pointer-events-none"></div>
+<div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none"></div>
+<!-- Large Background Abstract Medical Shape (Illustration) -->
+<div class="absolute top-[-10%] right-[-10%] w-96 h-96 opacity-5 pointer-events-none animate-fade-in">
+<span class="material-symbols-outlined text-[300px] text-primary" style="font-variation-settings: 'wght' 100;">emergency</span>
+</div>
+<!-- Main Content Area -->
+<main class="z-10 flex flex-col items-center justify-center text-center px-margin-mobile">
+<!-- Logo Section -->
+<div class="mb-lg animate-fade-up logo-glow" style="animation-delay: 0.1s;">
+<img alt="RapidTriage Logo" class="w-24 h-24 md:w-32 md:h-32 rounded-xl shadow-lg border border-surface-container-highest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBhB-DPYaTBBFMHaIAmkfb7lpKFCpfxqsxRkpVZAs3ShApZkf_auaUnnQjJ4qv0SP3jlRp0FhxPLIXfn1GhKrCtcweyniU8DE_APwsQUFedqByGbRvP8MhPwKnnCc2zToKk6SEDJJY6SK-MF5bXHqwj3yJrPm0pebDJDYBE0zsinU_Djk8ZKUHbB3mSZnssSW27AUl-zLW3qQbd3IgJXVPXeKNQW_lNSVBV9_2upp0jOyJSVWqW0vj0PLJYZYxNB3zvMblF2KLFs26"/>
+</div>
+<!-- Identity Section -->
+<div class="space-y-sm animate-fade-up" style="animation-delay: 0.3s;">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary tracking-tight">
+                RapidTriage
+            </h1>
+<p class="font-title-md text-title-md text-on-surface-variant uppercase tracking-widest opacity-80">
+                Mission-Critical Field Triage
+            </p>
+</div>
+<!-- Dynamic Status Section (Mocking internal system checks) -->
+<div class="mt-xl animate-fade-in" style="animation-delay: 1.2s;">
+<div class="flex items-center gap-xs text-secondary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">sync</span>
+<span id="status-text">Initializing Systems...</span>
+</div>
+</div>
+</main>
+<!-- Bottom Progress Indicator -->
+<footer class="absolute bottom-16 flex flex-col items-center animate-fade-in" style="animation-delay: 0.6s;">
+<div class="loader-ring"></div>
+<p class="mt-sm font-label-md text-label-md text-outline">v4.2.0-secure</p>
+</footer>
+<!-- Interaction & Transition Logic -->
+<script>
+        // Simulate real-time initialization steps for immersion
+        const statusText = document.getElementById('status-text');
+        const stages = [
+            "Initializing Systems...",
+            "Connecting to Secure Gateway...",
+            "Syncing Offline Database...",
+            "Validating Field Protocol..."
+        ];
+        
+        let currentStage = 0;
+        
+        const updateStatus = () => {
+            if (currentStage < stages.length) {
+                statusText.innerText = stages[currentStage];
+                currentStage++;
+                setTimeout(updateStatus, 800);
+            } else {
+                // Flash finish effect before "redirecting"
+                statusText.innerHTML = '<span class="text-secondary font-bold">READY</span>';
+                document.body.classList.add('transition-opacity', 'duration-500', 'opacity-0');
+                
+                // Final redirect simulation after fade
+                setTimeout(() => {
+                    console.log("Redirecting to Dashboard...");
+                    // In a real app: window.location.href = '/dashboard';
+                }, 500);
+            }
+        };
+
+        // Start sequence after initial animations settle
+        setTimeout(updateStatus, 1500);
+
+        // Responsive handling for touch target clarity (mobile check)
+        if (window.innerWidth < 768) {
+            console.log("Optimizing for mobile touch-targets...");
+        }
+    </script>
+</body></html>

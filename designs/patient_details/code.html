@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RapidTriage - Patient Details</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb59b",
+                    "on-primary-fixed": "#001848",
+                    "on-secondary-fixed-variant": "#004786",
+                    "on-tertiary-fixed-variant": "#812800",
+                    "surface-bright": "#fdf8fd",
+                    "on-secondary-container": "#003567",
+                    "primary-container": "#0052cc",
+                    "on-primary-fixed-variant": "#0040a2",
+                    "inverse-primary": "#b2c5ff",
+                    "primary": "#003d9b",
+                    "surface": "#fdf8fd",
+                    "on-tertiary-fixed": "#380d00",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#f1ecf2",
+                    "surface-container-highest": "#e5e1e7",
+                    "primary-fixed-dim": "#b2c5ff",
+                    "surface-dim": "#ddd9de",
+                    "background": "#fdf8fd",
+                    "on-surface": "#1c1b1f",
+                    "surface-tint": "#0c56d0",
+                    "secondary-fixed": "#d4e3ff",
+                    "secondary-container": "#54a0fe",
+                    "outline": "#737685",
+                    "on-surface-variant": "#434654",
+                    "on-secondary-fixed": "#001c3a",
+                    "surface-container-high": "#ebe7ec",
+                    "on-background": "#1c1b1f",
+                    "surface-tint": "#0c56d0",
+                    "surface-container-low": "#f7f2f8",
+                    "surface-variant": "#e5e1e7",
+                    "primary-fixed": "#dae2ff",
+                    "inverse-on-surface": "#f4eff5",
+                    "tertiary": "#7b2600",
+                    "on-tertiary-container": "#ffc6b2",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed": "#ffdbcf",
+                    "error": "#ba1a1a",
+                    "outline-variant": "#c3c6d6",
+                    "inverse-surface": "#313034",
+                    "tertiary-container": "#a33500",
+                    "on-error-container": "#93000a",
+                    "on-secondary": "#ffffff",
+                    "secondary": "#005faf",
+                    "secondary-fixed-dim": "#a5c8ff",
+                    "on-primary-container": "#c4d2ff",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "margin-mobile": "16px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "sm": "8px",
+                    "xl": "32px",
+                    "touch-target-min": "48px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "margin-tablet": "24px"
+            },
+            "fontFamily": {
+                    "title-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "label-lg": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c3c6d6; border-radius: 10px; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- Top AppBar - Following JSON Structure -->
+<header class="fixed top-0 w-full z-50 bg-surface shadow-sm flex justify-between items-center px-margin-mobile h-touch-target-min">
+<div class="flex items-center gap-4">
+<button class="active:opacity-80 transition-opacity flex items-center justify-center w-touch-target-min h-touch-target-min">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<div class="flex flex-col">
+<h1 class="font-title-lg text-title-lg text-primary truncate max-w-[180px]">Johnathan Doe</h1>
+<span class="font-label-md text-label-md text-on-surface-variant">ID: #492-AXB</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<!-- Priority Badge - High Contrast -->
+<div class="flex items-center bg-error px-3 py-1 rounded-full text-on-error">
+<span class="material-symbols-outlined text-[16px] mr-1" style="font-variation-settings: 'FILL' 1;">emergency</span>
+<span class="font-label-lg text-label-lg font-bold">P1 - CRITICAL</span>
+</div>
+<button class="material-symbols-outlined text-primary p-2 hover:bg-surface-container-high rounded-full transition-colors">cloud_sync</button>
+</div>
+</header>
+<main class="flex-1 mt-touch-target-min mb-24 p-margin-mobile space-y-lg max-w-4xl mx-auto w-full">
+<!-- Clinical Overview Bento Section -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<!-- Sync Status Card -->
+<div class="md:col-span-3 bg-surface-container-low border border-outline-variant p-md rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">wifi_off</span>
+<p class="font-body-md text-body-md font-semibold text-secondary">Local Storage Only - Pending Sync</p>
+</div>
+<button class="font-label-lg text-label-lg text-primary font-bold px-4 py-2 hover:bg-primary-fixed rounded-full transition-colors">PUSH NOW</button>
+</div>
+<!-- Triage Metadata -->
+<div class="bg-surface border-l-4 border-error p-md rounded-lg shadow-sm space-y-xs">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Symptoms</p>
+<p class="font-title-md text-title-md font-bold">Respiratory Distress</p>
+<p class="font-body-md text-body-md">SPO2: 88% | BP: 90/60</p>
+</div>
+<div class="bg-surface border-l-4 border-secondary p-md rounded-lg shadow-sm space-y-xs">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Location</p>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-sm">location_on</span>
+<p class="font-title-md text-title-md">Sector 7 - Ground Zero</p>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Lat: 40.7128 | Lon: -74.0060</p>
+</div>
+<div class="bg-surface border-l-4 border-primary p-md rounded-lg shadow-sm space-y-xs">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">NFC ID</p>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-sm">contactless</span>
+<p class="font-title-md text-title-md font-mono">TAG-A42-990</p>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Validated 12:44 PM</p>
+</div>
+</div>
+<!-- Chronological Timeline -->
+<section class="space-y-md">
+<h2 class="font-title-lg text-title-lg flex items-center gap-2">
+<span class="material-symbols-outlined">history</span>
+                Triage Timeline
+            </h2>
+<div class="relative space-y-sm pl-4 border-l-2 border-outline-variant">
+<!-- Step 1 -->
+<div class="relative pb-6">
+<div class="absolute -left-[25px] mt-1.5 w-4 h-4 rounded-full bg-error border-4 border-background"></div>
+<div class="bg-surface-container-high p-md rounded-xl">
+<div class="flex justify-between mb-2">
+<span class="font-label-md text-label-md font-bold text-error">INITIAL ASSESSMENT</span>
+<span class="font-label-md text-label-md text-on-surface-variant">12:30 PM</span>
+</div>
+<p class="font-body-md text-body-md">Patient found unresponsive. Triage category set to P1 (Immediate). Airway secured manually.</p>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="relative pb-6">
+<div class="absolute -left-[25px] mt-1.5 w-4 h-4 rounded-full bg-secondary border-4 border-background"></div>
+<div class="bg-surface-container p-md rounded-xl">
+<div class="flex justify-between mb-2">
+<span class="font-label-md text-label-md font-bold text-secondary">VITALS UPDATED</span>
+<span class="font-label-md text-label-md text-on-surface-variant">12:38 PM</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface p-2 rounded border border-outline-variant">
+<span class="font-label-md block">Pulse</span>
+<span class="font-title-md">110 BPM</span>
+</div>
+<div class="bg-surface p-2 rounded border border-outline-variant">
+<span class="font-label-md block">GCS</span>
+<span class="font-title-md">8/15</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="relative">
+<div class="absolute -left-[25px] mt-1.5 w-4 h-4 rounded-full bg-outline border-4 border-background"></div>
+<div class="bg-surface-container p-md rounded-xl opacity-75">
+<div class="flex justify-between mb-2">
+<span class="font-label-md text-label-md font-bold text-on-surface">TRANSPORT REQUESTED</span>
+<span class="font-label-md text-label-md text-on-surface-variant">12:45 PM</span>
+</div>
+<p class="font-body-md text-body-md">Heli-Vac Unit 4 dispatched to Sector 7. ETA 8 minutes.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Detailed Notes -->
+<section class="space-y-md">
+<h2 class="font-title-lg text-title-lg flex items-center gap-2">
+<span class="material-symbols-outlined">notes</span>
+                Clinical Notes
+            </h2>
+<div class="bg-surface border border-outline-variant p-md rounded-xl">
+<p class="font-body-lg text-body-lg text-on-surface leading-relaxed">
+                    Patient presents with sharp trauma to the upper thoracic cavity. Significant bleeding controlled via pressure dressing. Breath sounds absent on the left side. Needle decompression performed at 12:42 PM with positive air release. Monitoring for tension pneumothorax recurrence.
+                </p>
+<div class="mt-4 pt-4 border-t border-outline-variant flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+<div class="flex-none w-24 h-24 bg-surface-container-highest rounded-lg overflow-hidden relative group">
+<img class="w-full h-full object-cover" data-alt="A clinical photograph of a sterilized medical environment, focusing on a patient's monitor showing a stable waveform. The lighting is cold and fluorescent, characteristic of a mobile trauma unit. The color palette is composed of medical whites, clinical blues, and charcoal grays, creating a professional and focused atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzdJDcvwyIjSw9eFk3pvJsKACmIVbQQ9jQfn8VumZngxC1O6Dg5vnjgfbOCVOCk8n5tjRrN1rA3IYmaNq6Uqtk6SklciTjE96TAQNDWEa8wmKypYDPEqgzUBgOgR2YWRU-9A0NuS7973KQseR91STa84KtT6tyTmggBiuY6WH50YOZYI3xinXw32KrNiY3T60htutMzVn_OFhI_EXuq-vqmukma0x50rjXCeBAI7YlJCIBmC6UdaT22wvR1bBiLVKOYe7tY8zbOQuq"/>
+<div class="absolute inset-0 bg-black/20 group-active:bg-black/40 transition-all"></div>
+</div>
+<div class="flex-none w-24 h-24 bg-surface-container-highest rounded-lg overflow-hidden relative group">
+<img class="w-full h-full object-cover" data-alt="A close-up view of medical equipment in a disaster zone, specifically a portable ultrasound device showing a diagnostic image. The background is slightly blurred, showing the rugged, dusty environment of an emergency site. The lighting is harsh natural sunlight filtered through a medical tent, emphasizing the grit and urgency of field medicine." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAB7NTPsTx5Qywt6PQYyXjobLuit1KemZKC_JRKQQNt8hTiA9xAjOyWZoNjNelTnoZI4w8v2l4yg2VqJMY75Tfp_9Nty23z26HK3AX3bIAZwKioP_7DlZagcN8_RIxxZchbNInMPg7fVdomBFVdeJxoV5OahhxiF7wacvbw_xbglwXgrRspu5GSXosBa9bCWrBvUXZUJnn0QoqRZ_jaYmqdZeehwRGeA2kRfIDJyJSF0PQoNDKXZ0u7D7X2dz0b6PDxgOxJXIJek_7Z"/>
+<div class="absolute inset-0 bg-black/20 group-active:bg-black/40 transition-all"></div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Sticky Footer Actions - Fixed Bottom -->
+<footer class="fixed bottom-0 w-full bg-surface-container shadow-lg z-50 p-sm pb-safe-area">
+<div class="max-w-4xl mx-auto flex gap-3 justify-center items-center h-16">
+<button class="flex-1 max-w-[120px] h-touch-target-min flex items-center justify-center gap-2 bg-surface border border-outline text-on-surface font-label-lg rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+                Edit
+            </button>
+<button class="flex-1 h-touch-target-min flex items-center justify-center gap-2 bg-primary text-on-primary font-title-md rounded-full shadow-md active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+                Retry Sync
+            </button>
+<button class="flex-1 max-w-[120px] h-touch-target-min flex items-center justify-center gap-2 bg-error text-on-error font-label-lg rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+                Delete
+            </button>
+</div>
+</footer>
+<script>
+        // Micro-interaction for sync button
+        const syncBtn = document.querySelector('button:has(.material-symbols-outlined:contains("sync"))');
+        if (syncBtn) {
+            syncBtn.addEventListener('click', function() {
+                const icon = this.querySelector('.material-symbols-outlined');
+                icon.classList.add('animate-spin');
+                setTimeout(() => {
+                    icon.classList.remove('animate-spin');
+                }, 2000);
+            });
+        }
+
+        // Custom implementation for material icon string content selector in JS
+        document.querySelectorAll('.material-symbols-outlined').forEach(icon => {
+           if(icon.textContent.includes('sync')) {
+               icon.parentElement.addEventListener('click', () => {
+                   icon.style.transition = 'transform 1s linear';
+                   icon.style.transform = 'rotate(360deg)';
+                   setTimeout(() => {
+                       icon.style.transform = 'rotate(0deg)';
+                       icon.style.transition = 'none';
+                   }, 1000);
+               });
+           }
+        });
+    </script>
+</body></html>

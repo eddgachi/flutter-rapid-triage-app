@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RapidTriage - Emergency Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb59b",
+                    "on-primary-fixed": "#001848",
+                    "on-secondary-fixed-variant": "#004786",
+                    "on-tertiary-fixed-variant": "#812800",
+                    "surface-bright": "#fdf8fd",
+                    "on-secondary-container": "#003567",
+                    "primary-container": "#0052cc",
+                    "on-primary-fixed-variant": "#0040a2",
+                    "inverse-primary": "#b2c5ff",
+                    "primary": "#003d9b",
+                    "surface": "#fdf8fd",
+                    "on-tertiary-fixed": "#380d00",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#f1ecf2",
+                    "surface-container-highest": "#e5e1e7",
+                    "primary-fixed-dim": "#b2c5ff",
+                    "surface-dim": "#ddd9de",
+                    "background": "#fdf8fd",
+                    "on-surface": "#1c1b1f",
+                    "surface-tint": "#0c56d0",
+                    "secondary-fixed": "#d4e3ff",
+                    "secondary-container": "#54a0fe",
+                    "outline": "#737685",
+                    "on-surface-variant": "#434654",
+                    "on-secondary-fixed": "#001c3a",
+                    "surface-container-high": "#ebe7ec",
+                    "on-background": "#1c1b1f",
+                    "surface-container-low": "#f7f2f8",
+                    "surface-variant": "#e5e1e7",
+                    "primary-fixed": "#dae2ff",
+                    "inverse-on-surface": "#f4eff5",
+                    "tertiary": "#7b2600",
+                    "on-tertiary-container": "#ffc6b2",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed": "#ffdbcf",
+                    "error": "#ba1a1a",
+                    "outline-variant": "#c3c6d6",
+                    "inverse-surface": "#313034",
+                    "tertiary-container": "#a33500",
+                    "on-error-container": "#93000a",
+                    "on-secondary": "#ffffff",
+                    "secondary": "#005faf",
+                    "secondary-fixed-dim": "#a5c8ff",
+                    "on-primary-container": "#c4d2ff",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "margin-mobile": "16px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "sm": "8px",
+                    "xl": "32px",
+                    "touch-target-min": "48px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "margin-tablet": "24px"
+            },
+            "fontFamily": {
+                    "title-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "label-lg": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500"}],
+                    "headline-sm": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "700"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                    "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdf8fd;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+        }
+        .input-focus-ring:focus-within {
+            ring: 2px;
+            ring-color: #003d9b;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- Top AppBar (Identity Anchor) -->
+<header class="fixed top-0 w-full z-50 bg-surface shadow-sm flex justify-between items-center px-margin-mobile h-touch-target-min">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="emergency">emergency</span>
+<span class="font-headline-sm text-headline-sm font-bold text-primary">RapidTriage</span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="cloud_sync">cloud_sync</span>
+<span class="font-label-md text-label-md text-on-surface-variant">SYNCED</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile pt-xl pb-32">
+<div class="w-full max-w-md flex flex-col gap-lg">
+<!-- Branding Header -->
+<div class="flex flex-col items-center text-center gap-sm mt-lg">
+<div class="w-24 h-24 mb-sm rounded-xl overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBhB-DPYaTBBFMHaIAmkfb7lpKFCpfxqsxRkpVZAs3ShApZkf_auaUnnQjJ4qv0SP3jlRp0FhxPLIXfn1GhKrCtcweyniU8DE_APwsQUFedqByGbRvP8MhPwKnnCc2zToKk6SEDJJY6SK-MF5bXHqwj3yJrPm0pebDJDYBE0zsinU_Djk8ZKUHbB3mSZnssSW27AUl-zLW3qQbd3IgJXVPXeKNQW_lNSVBV9_2upp0jOyJSVWqW0vj0PLJYZYxNB3zvMblF2KLFs26"/>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">System Access</h1>
+<p class="font-body-md text-body-md text-on-surface-variant px-md">Please authenticate to access the triage queue. Clinical credentials required.</p>
+</div>
+<!-- Login Form -->
+<div class="bg-surface-container-low rounded-xl p-md shadow-sm border border-outline-variant">
+<form class="flex flex-col gap-md">
+<!-- Username/Email Field -->
+<div class="flex flex-col gap-xs">
+<label class="font-label-lg text-label-lg text-on-surface-variant" for="login-id">Email or Clinical ID</label>
+<div class="relative flex items-center group">
+<span class="material-symbols-outlined absolute left-md text-outline" data-icon="person">person</span>
+<input class="w-full h-touch-target-min pl-xl bg-surface border-b-2 border-outline focus:border-primary focus:ring-0 rounded-t-lg font-body-lg text-body-lg text-on-surface placeholder:text-outline-variant" id="login-id" placeholder="name@hospital.org" type="text"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="flex flex-col gap-xs">
+<label class="font-label-lg text-label-lg text-on-surface-variant" for="password">Security Password</label>
+<div class="relative flex items-center group">
+<span class="material-symbols-outlined absolute left-md text-outline" data-icon="lock">lock</span>
+<input class="w-full h-touch-target-min pl-xl bg-surface border-b-2 border-outline focus:border-primary focus:ring-0 rounded-t-lg font-body-lg text-body-lg text-on-surface placeholder:text-outline-variant" id="password" placeholder="••••••••" type="password"/>
+<button class="absolute right-md text-on-surface-variant" type="button">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember & Forgot Row -->
+<div class="flex justify-between items-center py-xs">
+<label class="flex items-center gap-sm cursor-pointer">
+<input class="w-5 h-5 rounded border-outline text-primary focus:ring-primary" type="checkbox"/>
+<span class="font-label-md text-label-md text-on-surface">Remember Me</span>
+</label>
+<a class="font-label-md text-label-md text-primary font-bold hover:underline" href="#">Forgot Password?</a>
+</div>
+<!-- Primary Action -->
+<button class="w-full h-touch-target-min bg-primary text-on-primary rounded-full font-title-md text-title-md shadow-sm hover:bg-primary-container transition-colors active:scale-[0.98]" type="submit">
+                        Login to Terminal
+                    </button>
+<!-- Offline Notice -->
+<div class="flex items-center gap-sm p-sm bg-surface-container-highest rounded-lg">
+<span class="material-symbols-outlined text-tertiary" data-icon="offline_bolt">offline_bolt</span>
+<p class="font-label-md text-label-md text-on-surface-variant">
+<span class="font-bold text-tertiary">Offline Login Enabled:</span> You can authenticate without network if you've logged in recently on this device.
+                        </p>
+</div>
+</form>
+</div>
+<!-- Biometric Placeholder -->
+<div class="flex flex-col items-center gap-sm">
+<span class="font-label-md text-label-md text-outline uppercase tracking-widest">or authenticate with</span>
+<button class="w-16 h-16 rounded-full border-2 border-outline-variant flex items-center justify-center text-primary hover:bg-surface-container-high transition-all active:scale-90">
+<span class="material-symbols-outlined" data-icon="fingerprint" style="font-size: 32px;">fingerprint</span>
+</button>
+<span class="font-label-md text-label-md text-on-surface-variant">Biometric ID</span>
+</div>
+</div>
+</main>
+<!-- Sticky Footer (Status & Info) -->
+<footer class="fixed bottom-0 w-full bg-surface-container shadow-lg pt-md pb-sm px-margin-mobile rounded-t-xl">
+<div class="flex flex-col items-center gap-xs">
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="font-label-md text-label-md text-on-surface">Central Database Connected</span>
+</div>
+<div class="h-4 w-px bg-outline-variant"></div>
+<span class="font-label-md text-label-md text-on-surface-variant">v1.0.4 - Production</span>
+</div>
+<p class="font-label-md text-label-md text-outline text-center">
+                © 2024 Emergency Services Network. Property of Metropolitan General Hospital. Authorized medical personnel only.
+            </p>
+</div>
+</footer>
+<!-- Micro-interaction Scripts -->
+<script>
+        document.querySelector('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin" data-icon="sync">sync</span> Authenticating...';
+            btn.classList.add('opacity-80');
+            
+            setTimeout(() => {
+                alert('RapidTriage Authentication Successful. Entering clinical queue...');
+                btn.innerHTML = 'Success';
+                btn.classList.replace('bg-primary', 'bg-emerald-600');
+            }, 1200);
+        });
+    </script>
+</body></html>

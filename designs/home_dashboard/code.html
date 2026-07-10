@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RapidTriage - Home Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb59b",
+                    "on-primary-fixed": "#001848",
+                    "on-secondary-fixed-variant": "#004786",
+                    "on-tertiary-fixed-variant": "#812800",
+                    "surface-bright": "#fdf8fd",
+                    "on-secondary-container": "#003567",
+                    "primary-container": "#0052cc",
+                    "on-primary-fixed-variant": "#0040a2",
+                    "inverse-primary": "#b2c5ff",
+                    "primary": "#003d9b",
+                    "surface": "#fdf8fd",
+                    "on-tertiary-fixed": "#380d00",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#f1ecf2",
+                    "surface-container-highest": "#e5e1e7",
+                    "primary-fixed-dim": "#b2c5ff",
+                    "surface-dim": "#ddd9de",
+                    "background": "#fdf8fd",
+                    "on-surface": "#1c1b1f",
+                    "surface-tint": "#0c56d0",
+                    "secondary-fixed": "#d4e3ff",
+                    "secondary-container": "#54a0fe",
+                    "outline": "#737685",
+                    "on-surface-variant": "#434654",
+                    "on-secondary-fixed": "#001c3a",
+                    "surface-container-high": "#ebe7ec",
+                    "on-background": "#1c1b1f",
+                    "surface-tint": "#0c56d0",
+                    "surface-container-low": "#f7f2f8",
+                    "surface-variant": "#e5e1e7",
+                    "primary-fixed": "#dae2ff",
+                    "inverse-on-surface": "#f4eff5",
+                    "tertiary": "#7b2600",
+                    "on-tertiary-container": "#ffc6b2",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed": "#ffdbcf",
+                    "error": "#ba1a1a",
+                    "outline-variant": "#c3c6d6",
+                    "inverse-surface": "#313034",
+                    "tertiary-container": "#a33500",
+                    "on-error-container": "#93000a",
+                    "on-secondary": "#ffffff",
+                    "secondary": "#005faf",
+                    "secondary-fixed-dim": "#a5c8ff",
+                    "on-primary-container": "#c4d2ff",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "margin-mobile": "16px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "sm": "8px",
+                    "xl": "32px",
+                    "touch-target-min": "48px",
+                    "gutter": "16px",
+                    "md": "16px",
+                    "margin-tablet": "24px"
+            },
+            "fontFamily": {
+                    "title-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "label-lg": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500"}],
+                    "headline-sm": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "700"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                    "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .scrolling-content { padding-top: 64px; padding-bottom: 80px; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface shadow-sm flex justify-between items-center px-margin-mobile h-touch-target-min w-full">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="emergency">emergency</span>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-primary leading-tight">RapidTriage</span>
+<span class="font-label-md text-label-md text-on-surface-variant">City General Hospital</span>
+</div>
+</div>
+<div class="flex items-center gap-xs bg-secondary-container px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-on-secondary-container text-[18px]" data-icon="cloud_done" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+<span class="font-label-md text-label-md text-on-secondary-container">Synced</span>
+</div>
+</header>
+<main class="scrolling-content px-margin-mobile max-w-4xl mx-auto space-y-lg pt-8">
+<!-- Welcome Section -->
+<section class="space-y-1">
+<h1 class="font-headline-sm text-headline-sm text-on-background">Welcome, John Doe</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Emergency Triage Interface Active</p>
+</section>
+<!-- Dashboard Stats: Bento Style -->
+<section class="grid grid-cols-2 md:grid-cols-3 gap-md">
+<div class="col-span-1 bg-surface-container-low p-md rounded-xl border border-outline-variant flex flex-col justify-between h-32">
+<span class="font-label-lg text-label-lg text-on-surface-variant">Awaiting Sync</span>
+<div class="flex items-end justify-between">
+<span class="font-headline-md text-headline-md text-primary">3</span>
+<span class="material-symbols-outlined text-primary opacity-20 text-4xl" data-icon="sync_problem">sync_problem</span>
+</div>
+</div>
+<div class="col-span-1 bg-surface-container-low p-md rounded-xl border border-outline-variant flex flex-col justify-between h-32">
+<span class="font-label-lg text-label-lg text-on-surface-variant">Synced Today</span>
+<div class="flex items-end justify-between">
+<span class="font-headline-md text-headline-md text-secondary">12</span>
+<span class="material-symbols-outlined text-secondary opacity-20 text-4xl" data-icon="check_circle">check_circle</span>
+</div>
+</div>
+<div class="col-span-2 md:col-span-1 bg-error-container p-md rounded-xl border border-error flex flex-col justify-between h-32">
+<span class="font-label-lg text-label-lg text-on-error-container">Critical Patients</span>
+<div class="flex items-end justify-between">
+<span class="font-headline-md text-headline-md text-error">1</span>
+<span class="material-symbols-outlined text-error opacity-20 text-4xl" data-icon="warning" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+</div>
+</section>
+<!-- Quick Actions Grid -->
+<section class="space-y-md">
+<h2 class="font-title-lg text-title-lg">Quick Actions</h2>
+<div class="grid grid-cols-2 gap-md">
+<button class="bg-primary text-on-primary h-touch-target-min rounded-xl font-title-md flex flex-col items-center justify-center p-xl gap-xs active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-3xl" data-icon="person_add">person_add</span>
+<span>New Triage</span>
+</button>
+<button class="bg-surface-container-highest text-on-surface h-touch-target-min rounded-xl font-title-md flex flex-col items-center justify-center p-xl gap-xs active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-3xl" data-icon="list_alt">list_alt</span>
+<span>View Queue</span>
+</button>
+<button class="bg-surface-container-highest text-on-surface h-touch-target-min rounded-xl font-title-md flex flex-col items-center justify-center p-xl gap-xs active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-3xl" data-icon="nfc">nfc</span>
+<span>Scan NFC</span>
+</button>
+<button class="bg-secondary-container text-on-secondary-container h-touch-target-min rounded-xl font-title-md flex flex-col items-center justify-center p-xl gap-xs active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-3xl" data-icon="sync">sync</span>
+<span>Sync Now</span>
+</button>
+</div>
+</section>
+<!-- Recent Activity -->
+<section class="space-y-md">
+<div class="flex justify-between items-center">
+<h2 class="font-title-lg text-title-lg">Recent Activity</h2>
+<button class="text-primary font-label-lg">View All</button>
+</div>
+<div class="space-y-sm">
+<!-- Record 1 (Critical) -->
+<div class="bg-surface border border-outline-variant rounded-xl overflow-hidden flex h-20 shadow-sm">
+<div class="w-3 bg-error h-full"></div>
+<div class="flex-1 px-md flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md">Patient #8294</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Triage P1 • 14:02</span>
+</div>
+<span class="material-symbols-outlined text-error" data-icon="cloud_off">cloud_off</span>
+</div>
+</div>
+<!-- Record 2 -->
+<div class="bg-surface border border-outline-variant rounded-xl overflow-hidden flex h-20 shadow-sm">
+<div class="w-3 bg-secondary-container h-full"></div>
+<div class="flex-1 px-md flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md">Patient #8293</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Triage P3 • 13:45</span>
+</div>
+<span class="material-symbols-outlined text-secondary" data-icon="cloud_done" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+</div>
+</div>
+<!-- Record 3 -->
+<div class="bg-surface border border-outline-variant rounded-xl overflow-hidden flex h-20 shadow-sm">
+<div class="w-3 bg-tertiary-container h-full"></div>
+<div class="flex-1 px-md flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md">Patient #8292</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Triage P2 • 13:20</span>
+</div>
+<span class="material-symbols-outlined text-secondary" data-icon="cloud_done" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-xs pb-sm pt-xs bg-surface-container shadow-lg rounded-t-xl">
+<!-- Home (Active) -->
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<!-- Queue -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span class="font-label-md text-label-md">Queue</span>
+</a>
+<!-- History -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-md text-label-md">History</span>
+</a>
+<!-- Settings -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<script>
+        // Simple interaction for the "Sync Now" button
+        const syncBtn = document.querySelector('button:last-of-type');
+        if (syncBtn) {
+            syncBtn.addEventListener('click', () => {
+                const icon = syncBtn.querySelector('.material-symbols-outlined');
+                icon.classList.add('animate-spin');
+                setTimeout(() => {
+                    icon.classList.remove('animate-spin');
+                    alert('Database synchronization completed successfully.');
+                }, 1500);
+            });
+        }
+    </script>
+</body></html>

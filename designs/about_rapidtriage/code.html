@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>About RapidTriage</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb59b",
+                        "on-primary-fixed": "#001848",
+                        "on-secondary-fixed-variant": "#004786",
+                        "on-tertiary-fixed-variant": "#812800",
+                        "surface-bright": "#fdf8fd",
+                        "on-secondary-container": "#003567",
+                        "primary-container": "#0052cc",
+                        "on-primary-fixed-variant": "#0040a2",
+                        "inverse-primary": "#b2c5ff",
+                        "primary": "#003d9b",
+                        "surface": "#fdf8fd",
+                        "on-tertiary-fixed": "#380d00",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#f1ecf2",
+                        "surface-container-highest": "#e5e1e7",
+                        "primary-fixed-dim": "#b2c5ff",
+                        "surface-dim": "#ddd9de",
+                        "background": "#fdf8fd",
+                        "on-surface": "#1c1b1f",
+                        "surface-tint": "#0c56d0",
+                        "secondary-fixed": "#d4e3ff",
+                        "secondary-container": "#54a0fe",
+                        "outline": "#737685",
+                        "on-surface-variant": "#434654",
+                        "on-secondary-fixed": "#001c3a",
+                        "surface-container-high": "#ebe7ec",
+                        "on-background": "#1c1b1f",
+                        "surface-container-low": "#f7f2f8",
+                        "surface-variant": "#e5e1e7",
+                        "primary-fixed": "#dae2ff",
+                        "inverse-on-surface": "#f4eff5",
+                        "tertiary": "#7b2600",
+                        "on-tertiary-container": "#ffc6b2",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#ffdbcf",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#c3c6d6",
+                        "inverse-surface": "#313034",
+                        "tertiary-container": "#a33500",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "secondary": "#005faf",
+                        "secondary-fixed-dim": "#a5c8ff",
+                        "on-primary-container": "#c4d2ff",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "margin-mobile": "16px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "xl": "32px",
+                        "touch-target-min": "48px",
+                        "gutter": "16px",
+                        "md": "16px",
+                        "margin-tablet": "24px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-lg": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "500"}],
+                        "headline-sm": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "title-lg": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "display-lg": ["57px", {"lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "700"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                        "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for clinical feel */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c3c6d6; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface shadow-sm flex justify-between items-center px-margin-mobile h-touch-target-min">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="emergency">emergency</span>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">RapidTriage</h1>
+</div>
+<button class="active:opacity-80 transition-opacity hover:bg-surface-container-high p-2 rounded-full">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="cloud_sync">cloud_sync</span>
+</button>
+</header>
+<main class="pt-20 px-margin-mobile max-w-2xl mx-auto">
+<!-- Logo and Identification Section -->
+<section class="flex flex-col items-center text-center py-xl bg-surface-container-low rounded-xl border border-outline-variant/30 mb-lg shadow-sm">
+<div class="w-32 h-32 mb-md">
+<img alt="RapidTriage Logo" class="w-full h-full object-contain rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBhB-DPYaTBBFMHaIAmkfb7lpKFCpfxqsxRkpVZAs3ShApZkf_auaUnnQjJ4qv0SP3jlRp0FhxPLIXfn1GhKrCtcweyniU8DE_APwsQUFedqByGbRvP8MhPwKnnCc2zToKk6SEDJJY6SK-MF5bXHqwj3yJrPm0pebDJDYBE0zsinU_Djk8ZKUHbB3mSZnssSW27AUl-zLW3qQbd3IgJXVPXeKNQW_lNSVBV9_2upp0jOyJSVWqW0vj0PLJYZYxNB3zvMblF2KLFs26"/>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-xs">RapidTriage</h2>
+<p class="font-label-lg text-label-lg text-on-surface-variant mb-sm tracking-widest uppercase">Version 2.4.0-Stable</p>
+<div class="h-[1px] w-16 bg-primary/20 my-sm"></div>
+<p class="font-body-md text-body-md text-on-surface font-semibold">Emergency Response Systems Group</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Clinical Decision Support Unit</p>
+</section>
+<!-- Tech Stack Bento Section -->
+<section class="mb-lg">
+<h3 class="font-title-lg text-title-lg text-on-surface mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="memory">memory</span>
+                System Core
+            </h3>
+<div class="grid grid-cols-2 gap-sm">
+<div class="bg-surface-container p-md rounded-lg flex flex-col gap-xs border border-outline-variant/20">
+<span class="text-primary font-bold font-label-md uppercase text-[10px]">Framework</span>
+<span class="font-title-md text-title-md">Flutter</span>
+<p class="text-xs text-on-surface-variant">High-performance cross-platform rendering engine.</p>
+</div>
+<div class="bg-surface-container p-md rounded-lg flex flex-col gap-xs border border-outline-variant/20">
+<span class="text-secondary font-bold font-label-md uppercase text-[10px]">State Management</span>
+<span class="font-title-md text-title-md">Riverpod</span>
+<p class="text-xs text-on-surface-variant">Compile-safe reactive data flow architecture.</p>
+</div>
+<div class="bg-surface-container p-md rounded-lg flex flex-col gap-xs border border-outline-variant/20">
+<span class="text-tertiary font-bold font-label-md uppercase text-[10px]">Local Storage</span>
+<span class="font-title-md text-title-md">Hive</span>
+<p class="text-xs text-on-surface-variant">NoSQL offline-first medical record persistence.</p>
+</div>
+<div class="bg-surface-container p-md rounded-lg flex flex-col gap-xs border border-outline-variant/20">
+<span class="text-on-surface font-bold font-label-md uppercase text-[10px]">Navigation</span>
+<span class="font-title-md text-title-md">GoRouter</span>
+<p class="text-xs text-on-surface-variant">Declarative deep-linking and routing logic.</p>
+</div>
+</div>
+</section>
+<!-- Legal and Documentation Links -->
+<section class="space-y-sm">
+<h3 class="font-title-lg text-title-lg text-on-surface mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="gavel">gavel</span>
+                Compliance &amp; Legal
+            </h3>
+<a class="flex items-center justify-between p-md bg-white rounded-lg border border-outline-variant/50 hover:bg-surface-container-low transition-colors group" href="#">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="privacy_tip">privacy_tip</span>
+<span class="font-title-md text-title-md">Privacy Policy</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-md bg-white rounded-lg border border-outline-variant/50 hover:bg-surface-container-low transition-colors group" href="#">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="description">description</span>
+<span class="font-title-md text-title-md">Terms of Service</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-md bg-white rounded-lg border border-outline-variant/50 hover:bg-surface-container-low transition-colors group" href="#">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="verified">verified</span>
+<span class="font-title-md text-title-md">Open Source Licenses</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+</section>
+<footer class="mt-xl text-center pb-xl">
+<p class="font-body-md text-body-md text-outline mb-xs">© 2024 Emergency Response Systems Group</p>
+<p class="font-label-md text-label-md text-outline-variant">Designed for clinical environments.</p>
+</footer>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-xs pb-sm pt-xs bg-surface-container rounded-t-xl shadow-lg">
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span class="font-label-md text-label-md">Queue</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-md text-label-md">History</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-transform duration-100">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</button>
+</nav>
+<script>
+        // Micro-interaction for list items
+        document.querySelectorAll('a').forEach(link => {
+            link.addEventListener('mousedown', () => {
+                link.classList.add('scale-[0.98]');
+            });
+            link.addEventListener('mouseup', () => {
+                link.classList.remove('scale-[0.98]');
+            });
+        });
+
+        // Simulating the clinical "Lock" state mentioned in Brand Anchors
+        console.log("RapidTriage: Clinical environment protocols active. UI optimized for gloved touch targets.");
+    </script>
+</body></html>
