@@ -4,6 +4,10 @@ class AppConstants {
   static const String appName = 'RapidTriage';
   static const String appVersion = '4.2.0-secure';
   static const String appBuild = '8829';
+
+  static const authBox = 'auth';
+  static const settingsBox = 'settings';
+  static const triageBox = 'triage_records';
 }
 
 class TriageLevel {

@@ -1,0 +1,17 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/services/api_service.dart';
+import '../core/services/connectivity_service.dart';
+import '../core/services/fake_auth_service.dart';
+import '../core/services/hive_service.dart';
+import '../core/services/location_service.dart';
+
+final hiveServiceProvider = Provider((ref) => HiveService());
+
+final apiServiceProvider = Provider((ref) => ApiService());
+
+final connectivityServiceProvider = Provider((ref) => ConnectivityService());
+
+final locationServiceProvider = Provider((ref) => LocationService());
+
+final fakeAuthServiceProvider = Provider((ref) => FakeAuthService());
