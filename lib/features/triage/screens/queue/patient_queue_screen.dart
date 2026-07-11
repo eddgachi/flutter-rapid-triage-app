@@ -1,16 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
+import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
+import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/queue_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/bottom_nav_bar.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_typography.dart';
-import '../../dummy/dummy_data.dart';
-import '../../widgets/shared/bottom_nav_bar.dart';
-
-class PatientQueueScreen extends StatelessWidget {
+class PatientQueueScreen extends ConsumerStatefulWidget {
   const PatientQueueScreen({super.key});
 
   @override
+  ConsumerState<PatientQueueScreen> createState() => _PatientQueueScreenState();
+}
+
+class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Load queue data on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(queueControllerProvider.notifier).load();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final queueState = ref.watch(queueControllerProvider);
+    final records = queueState.records;
+
+    // Get pending count from the controller
+    final pendingCount = ref
+        .read(queueControllerProvider.notifier)
+        .pendingCount();
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -25,14 +57,52 @@ class PatientQueueScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     _buildFilterChips(),
                     const SizedBox(height: 16),
-                    _buildQueueHeader(),
+                    _buildQueueHeader(pendingCount),
                     const SizedBox(height: 8),
-                    ...DummyData.queue.map(
-                      (item) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _QueueCard(item: item),
+                    if (queueState.loading)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    else if (records.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.people_outline,
+                                size: 64,
+                                color: AppColors.outline,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No patients in queue',
+                                style: AppTypography.textTheme.headlineSmall
+                                    ?.copyWith(color: AppColors.onSurface),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Patient records will appear here once they are created.',
+                                style: AppTypography.textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      ...records.map(
+                        (record) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _QueueCard(record: record),
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -96,12 +166,28 @@ class PatientQueueScreen extends StatelessWidget {
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const TextField(
+      child: TextField(
+        controller: _searchController,
+        onChanged: (query) {
+          ref.read(queueControllerProvider.notifier).search(query);
+        },
         decoration: InputDecoration(
           hintText: 'Search patient name or ID...',
-          prefixIcon: Icon(Icons.search, color: AppColors.onSurfaceVariant),
+          prefixIcon: const Icon(
+            Icons.search,
+            color: AppColors.onSurfaceVariant,
+          ),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, size: 20),
+                  onPressed: () {
+                    _searchController.clear();
+                    ref.read(queueControllerProvider.notifier).load();
+                  },
+                )
+              : null,
         ),
       ),
     );
@@ -113,20 +199,58 @@ class PatientQueueScreen extends StatelessWidget {
       child: Row(
         children: [
           _FilterChip(
-            label: 'Priority',
-            icon: Icons.filter_list,
+            label: 'All',
             isActive: true,
+            onTap: () {
+              ref.read(queueControllerProvider.notifier).load();
+            },
           ),
           const SizedBox(width: 8),
-          _FilterChip(label: 'Sync Status', isActive: false),
+          _FilterChip(
+            label: 'Critical (P1)',
+            isActive: false,
+            onTap: () {
+              ref.read(queueControllerProvider.notifier).filterPriority(1);
+            },
+          ),
           const SizedBox(width: 8),
-          _FilterChip(label: 'Date', isActive: false),
+          _FilterChip(
+            label: 'Urgent (P2)',
+            isActive: false,
+            onTap: () {
+              ref.read(queueControllerProvider.notifier).filterPriority(2);
+            },
+          ),
+          const SizedBox(width: 8),
+          _FilterChip(
+            label: 'Delayed (P3)',
+            isActive: false,
+            onTap: () {
+              ref.read(queueControllerProvider.notifier).filterPriority(3);
+            },
+          ),
+          const SizedBox(width: 8),
+          _FilterChip(
+            label: 'Pending Sync',
+            isActive: false,
+            onTap: () {
+              ref.read(queueControllerProvider.notifier).loadPending();
+            },
+          ),
+          const SizedBox(width: 8),
+          _FilterChip(
+            label: 'Synced',
+            isActive: false,
+            onTap: () {
+              ref.read(queueControllerProvider.notifier).loadSynced();
+            },
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildQueueHeader() {
+  Widget _buildQueueHeader(int pendingCount) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -143,7 +267,7 @@ class PatientQueueScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
-            '12 Pending',
+            '$pendingCount Pending',
             style: AppTypography.textTheme.labelMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -156,57 +280,52 @@ class PatientQueueScreen extends StatelessWidget {
 
 class _FilterChip extends StatelessWidget {
   final String label;
-  final IconData? icon;
   final bool isActive;
+  final VoidCallback onTap;
 
-  const _FilterChip({required this.label, this.icon, this.isActive = false});
+  const _FilterChip({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      decoration: BoxDecoration(
-        color: isActive
-            ? AppColors.secondaryContainer
-            : AppColors.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(9999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(
-              icon,
-              size: 18,
-              color: isActive
-                  ? AppColors.onSecondaryContainer
-                  : AppColors.onSurfaceVariant,
-            ),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            label,
-            style: AppTypography.textTheme.labelLarge?.copyWith(
-              color: isActive
-                  ? AppColors.onSecondaryContainer
-                  : AppColors.onSurfaceVariant,
-            ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? AppColors.secondaryContainer
+              : AppColors.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(9999),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.textTheme.labelLarge?.copyWith(
+            color: isActive
+                ? AppColors.onSecondaryContainer
+                : AppColors.onSurfaceVariant,
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
 class _QueueCard extends StatelessWidget {
-  final DummyQueueItem item;
+  final TriageRecord record;
 
-  const _QueueCard({required this.item});
+  const _QueueCard({required this.record});
 
   @override
   Widget build(BuildContext context) {
+    final priorityColor = _getPriorityColor(record.priority);
+    final isSynced = record.syncStatus == SyncStatus.synced;
+
     return GestureDetector(
-      onTap: () => context.go('/patient'),
+      onTap: () => context.go('/patient/${record.id}'),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLowest,
@@ -218,7 +337,7 @@ class _QueueCard extends StatelessWidget {
             Container(
               width: 8,
               decoration: BoxDecoration(
-                color: item.triageColor,
+                color: priorityColor,
                 borderRadius: const BorderRadius.horizontal(
                   left: Radius.circular(12),
                 ),
@@ -234,7 +353,7 @@ class _QueueCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          item.name,
+                          record.patient.name,
                           style: AppTypography.textTheme.titleMedium?.copyWith(
                             color: AppColors.onSurface,
                           ),
@@ -245,14 +364,14 @@ class _QueueCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: item.triageColor,
+                            color: priorityColor,
                             borderRadius: BorderRadius.circular(9999),
                           ),
                           child: Text(
-                            item.triageLevel,
+                            _getPriorityLabel(record.priority),
                             style: AppTypography.textTheme.labelMedium
                                 ?.copyWith(
-                                  color: item.triageLevel == 'PRIORITY P3'
+                                  color: record.priority == 3
                                       ? Colors.black
                                       : Colors.white,
                                 ),
@@ -273,7 +392,7 @@ class _QueueCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              item.createdAt,
+                              _formatTime(record.createdAt),
                               style: AppTypography.textTheme.labelMedium
                                   ?.copyWith(color: AppColors.onSurfaceVariant),
                             ),
@@ -282,20 +401,18 @@ class _QueueCard extends StatelessWidget {
                         Row(
                           children: [
                             Icon(
-                              item.syncStatus == 'Synced'
-                                  ? Icons.check_circle
-                                  : Icons.schedule,
+                              isSynced ? Icons.check_circle : Icons.schedule,
                               size: 16,
-                              color: item.syncStatus == 'Synced'
+                              color: isSynced
                                   ? AppColors.primary
                                   : AppColors.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              item.syncStatus,
+                              isSynced ? 'Synced' : 'Pending',
                               style: AppTypography.textTheme.labelMedium
                                   ?.copyWith(
-                                    color: item.syncStatus == 'Synced'
+                                    color: isSynced
                                         ? AppColors.primary
                                         : AppColors.onSurfaceVariant,
                                   ),
@@ -312,5 +429,52 @@ class _QueueCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _getPriorityColor(int priority) {
+    switch (priority) {
+      case 1:
+        return AppColors.error;
+      case 2:
+        return AppColors.p2Urgent;
+      case 3:
+        return AppColors.p3Delayed;
+      case 4:
+        return AppColors.inverseSurface;
+      default:
+        return AppColors.primary;
+    }
+  }
+
+  String _getPriorityLabel(int priority) {
+    switch (priority) {
+      case 1:
+        return 'P1';
+      case 2:
+        return 'P2';
+      case 3:
+        return 'P3';
+      case 4:
+        return 'P4';
+      case 5:
+        return 'P5';
+      default:
+        return 'P${priority.toString()}';
+    }
+  }
+
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
   }
 }

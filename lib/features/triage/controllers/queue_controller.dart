@@ -221,6 +221,23 @@ class QueueController extends Notifier<QueueState> {
     }
   }
 
+  // ==================== COUNT METHODS ====================
+  int totalCount() {
+    return _repository.totalPatients();
+  }
+
+  int pendingCount() {
+    return _repository.pendingCount();
+  }
+
+  int syncedCount() {
+    return _repository.syncedCount();
+  }
+
+  int criticalCount() {
+    return _repository.criticalCount();
+  }
+
   // ==================== GET COUNT INFORMATION ====================
   Map<String, int> getCounts() {
     return {
