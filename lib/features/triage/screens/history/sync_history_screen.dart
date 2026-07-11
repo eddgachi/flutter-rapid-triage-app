@@ -1,15 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
+import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
+import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/history_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/bottom_nav_bar.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_typography.dart';
-import '../../dummy/dummy_data.dart';
-import '../../widgets/shared/bottom_nav_bar.dart';
-
-class SyncHistoryScreen extends StatelessWidget {
+class SyncHistoryScreen extends ConsumerWidget {
   const SyncHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyState = ref.watch(historyControllerProvider);
+    final records = historyState.records;
+
+    // Calculate stats
+    final total = records.length;
+    final synced = records
+        .where((r) => r.syncStatus == SyncStatus.synced)
+        .length;
+    final failed = records
+        .where((r) => r.syncStatus == SyncStatus.failed)
+        .length;
+    final pending = records
+        .where((r) => r.syncStatus == SyncStatus.pending)
+        .length;
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -21,16 +38,59 @@ class SyncHistoryScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildStatsBento(),
-                    const SizedBox(height: 24),
-                    _buildActionBar(),
-                    const SizedBox(height: 16),
-                    ...DummyData.syncRecords.map(
-                      (r) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _SyncRecordCard(record: r),
-                      ),
+                    _buildStatsBento(
+                      total: total,
+                      synced: synced,
+                      failed: failed,
+                      pending: pending,
                     ),
+                    const SizedBox(height: 24),
+                    _buildActionBar(ref),
+                    const SizedBox(height: 16),
+                    if (historyState.loading)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    else if (records.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.history,
+                                size: 64,
+                                color: AppColors.outline,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No sync history',
+                                style: AppTypography.textTheme.headlineSmall
+                                    ?.copyWith(color: AppColors.onSurface),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Patient records will appear here once they are created.',
+                                style: AppTypography.textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      ...records.map(
+                        (record) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _SyncRecordCard(record: record),
+                        ),
+                      ),
                     const SizedBox(height: 24),
                     _buildEndOfHistory(),
                   ],
@@ -76,7 +136,12 @@ class SyncHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsBento() {
+  Widget _buildStatsBento({
+    required int total,
+    required int synced,
+    required int failed,
+    required int pending,
+  }) {
     return Column(
       children: [
         Row(
@@ -84,7 +149,7 @@ class SyncHistoryScreen extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 label: 'Total Records',
-                value: '124',
+                value: total.toString(),
                 color: AppColors.primary,
               ),
             ),
@@ -92,7 +157,7 @@ class SyncHistoryScreen extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 label: 'Synced',
-                value: '118',
+                value: synced.toString(),
                 color: AppColors.primary,
                 bgColor: AppColors.primaryContainer,
               ),
@@ -105,7 +170,7 @@ class SyncHistoryScreen extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 label: 'Failed',
-                value: '4',
+                value: failed.toString(),
                 color: AppColors.error,
                 bgColor: AppColors.errorContainer,
               ),
@@ -114,7 +179,7 @@ class SyncHistoryScreen extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 label: 'Pending',
-                value: '2',
+                value: pending.toString(),
                 color: AppColors.onSurfaceVariant,
                 bgColor: AppColors.surfaceContainerHighest,
               ),
@@ -125,7 +190,7 @@ class SyncHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionBar() {
+  Widget _buildActionBar(WidgetRef ref) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -135,13 +200,15 @@ class SyncHistoryScreen extends StatelessWidget {
             style: AppTypography.textTheme.titleLarge?.copyWith(
               color: AppColors.onSurface,
             ),
-            overflow: TextOverflow.ellipsis, // <-- prevent overflow
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         FilledButton.icon(
-          onPressed: () {},
+          onPressed: () {
+            ref.read(historyControllerProvider.notifier).refresh();
+          },
           icon: const Icon(Icons.refresh, size: 20),
-          label: const Text('Retry All Failed'),
+          label: const Text('Refresh'),
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.onPrimary,
@@ -240,16 +307,21 @@ class _StatCard extends StatelessWidget {
 }
 
 class _SyncRecordCard extends StatelessWidget {
-  final DummySyncRecord record;
+  final TriageRecord record;
 
   const _SyncRecordCard({required this.record});
 
   @override
   Widget build(BuildContext context) {
+    final priorityColor = _getPriorityColor(record.priority);
+    final isSynced = record.syncStatus == SyncStatus.synced;
+    final isFailed = record.syncStatus == SyncStatus.failed;
+    final statusLabel = record.syncStatus.name.toUpperCase();
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border(left: BorderSide(color: record.leftColor, width: 4)),
+        border: Border(left: BorderSide(color: priorityColor, width: 4)),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
@@ -263,10 +335,22 @@ class _SyncRecordCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: record.iconBgColor,
+              color: priorityColor.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
-            child: Icon(record.icon, color: record.iconColor, size: 24),
+            child: Icon(
+              isSynced
+                  ? Icons.cloud_done
+                  : isFailed
+                  ? Icons.cloud_off
+                  : Icons.cloud_sync,
+              color: isSynced
+                  ? AppColors.primary
+                  : isFailed
+                  ? AppColors.error
+                  : AppColors.failed,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -274,21 +358,23 @@ class _SyncRecordCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  record.patientName,
+                  record.patient.name,
                   style: AppTypography.textTheme.titleMedium?.copyWith(
                     color: AppColors.onSurface,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Triage ${record.triageLevel} \u2022 ${record.description}',
+                  '${_getPriorityLabel(record.priority)} \u2022 ${record.chiefComplaint}',
                   style: AppTypography.textTheme.bodyMedium?.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  record.time,
+                  _formatTime(record.createdAt),
                   style: AppTypography.textTheme.labelMedium?.copyWith(
                     color: AppColors.outline,
                   ),
@@ -303,31 +389,47 @@ class _SyncRecordCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: record.statusColor.withOpacity(0.15),
+                  color: isSynced
+                      ? AppColors.primary.withOpacity(0.15)
+                      : isFailed
+                      ? AppColors.error.withOpacity(0.15)
+                      : AppColors.failed.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(9999),
                   border: Border.all(
-                    color: record.statusColor.withOpacity(0.2),
+                    color: isSynced
+                        ? AppColors.primary.withOpacity(0.2)
+                        : isFailed
+                        ? AppColors.error.withOpacity(0.2)
+                        : AppColors.failed.withOpacity(0.2),
                   ),
                 ),
                 child: Text(
-                  record.status,
+                  statusLabel,
                   style: AppTypography.textTheme.labelMedium?.copyWith(
-                    color: record.statusColor,
+                    color: isSynced
+                        ? AppColors.primary
+                        : isFailed
+                        ? AppColors.error
+                        : AppColors.failed,
                   ),
                 ),
               ),
               const SizedBox(height: 8),
               IconButton(
                 icon: Icon(
-                  record.status == 'Sync Failed'
-                      ? Icons.replay
-                      : Icons.visibility,
+                  isFailed ? Icons.replay : Icons.visibility,
                   size: 20,
-                  color: record.status == 'Sync Failed'
+                  color: isFailed
                       ? AppColors.primary
                       : AppColors.onSurfaceVariant,
                 ),
-                onPressed: () {},
+                onPressed: isFailed
+                    ? () {
+                        // TODO: Implement retry sync
+                      }
+                    : () {
+                        // TODO: Navigate to patient details
+                      },
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               ),
@@ -336,5 +438,52 @@ class _SyncRecordCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _getPriorityColor(int priority) {
+    switch (priority) {
+      case 1:
+        return AppColors.error;
+      case 2:
+        return AppColors.p2Urgent;
+      case 3:
+        return AppColors.p3Delayed;
+      case 4:
+        return AppColors.inverseSurface;
+      default:
+        return AppColors.primary;
+    }
+  }
+
+  String _getPriorityLabel(int priority) {
+    switch (priority) {
+      case 1:
+        return 'P1 - Critical';
+      case 2:
+        return 'P2 - Urgent';
+      case 3:
+        return 'P3 - Delayed';
+      case 4:
+        return 'P4 - Expectant';
+      case 5:
+        return 'P5 - Minor';
+      default:
+        return 'P${priority.toString()}';
+    }
+  }
+
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
   }
 }

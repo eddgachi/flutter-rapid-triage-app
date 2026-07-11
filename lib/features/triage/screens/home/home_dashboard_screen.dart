@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
+import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
+import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
+import 'package:flutter_rapid_triage/core/theme/app_spacing.dart';
+import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/history_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/queue_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
+import 'package:flutter_rapid_triage/features/triage/screens/patient/patient_details_screen.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/bottom_nav_bar.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_radius.dart';
-import '../../../../../core/theme/app_spacing.dart';
-import '../../../../../core/theme/app_typography.dart';
-import '../../dummy/dummy_data.dart';
-import '../../widgets/shared/bottom_nav_bar.dart';
-import '../patient/patient_details_screen.dart';
-
-class HomeDashboardScreen extends StatelessWidget {
+class HomeDashboardScreen extends ConsumerWidget {
   const HomeDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch both controllers
+    final queueState = ref.watch(queueControllerProvider);
+    final historyState = ref.watch(historyControllerProvider);
+
+    // Get counts
+    final counts = ref.read(queueControllerProvider.notifier).getCounts();
+    final criticalCount = counts['critical'] ?? 0;
+    final pendingCount = counts['pending'] ?? 0;
+    final syncedCount = counts['synced'] ?? 0;
+
+    // Get recent activity (latest 5 records)
+    final recentRecords = historyState.records.take(5).toList();
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -32,11 +48,15 @@ class HomeDashboardScreen extends StatelessWidget {
                   children: [
                     _buildWelcome(),
                     const SizedBox(height: AppSpacing.lg),
-                    _buildStatsGrid(),
+                    _buildStatsGrid(
+                      pendingCount: pendingCount,
+                      syncedCount: syncedCount,
+                      criticalCount: criticalCount,
+                    ),
                     const SizedBox(height: AppSpacing.lg),
                     _buildQuickActions(context),
                     const SizedBox(height: AppSpacing.lg),
-                    _buildRecentActivity(context),
+                    _buildRecentActivity(context, recentRecords),
                   ],
                 ),
               ),
@@ -135,7 +155,11 @@ class HomeDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsGrid() {
+  Widget _buildStatsGrid({
+    required int pendingCount,
+    required int syncedCount,
+    required int criticalCount,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Column(
@@ -145,7 +169,7 @@ class HomeDashboardScreen extends StatelessWidget {
                 Expanded(
                   child: _DashboardCard(
                     label: 'Awaiting Sync',
-                    value: '3',
+                    value: pendingCount.toString(),
                     icon: Icons.sync_problem,
                     iconColor: AppColors.primary,
                     bgColor: AppColors.surfaceContainerLow,
@@ -155,7 +179,7 @@ class HomeDashboardScreen extends StatelessWidget {
                 Expanded(
                   child: _DashboardCard(
                     label: 'Synced Today',
-                    value: '12',
+                    value: syncedCount.toString(),
                     icon: Icons.check_circle,
                     iconColor: AppColors.secondary,
                     bgColor: AppColors.surfaceContainerLow,
@@ -166,7 +190,7 @@ class HomeDashboardScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             _DashboardCard(
               label: 'Critical Patients',
-              value: '1',
+              value: criticalCount.toString(),
               icon: Icons.warning_rounded,
               iconColor: AppColors.error,
               bgColor: AppColors.errorContainer,
@@ -221,7 +245,9 @@ class HomeDashboardScreen extends StatelessWidget {
                 label: 'Scan NFC',
                 color: AppColors.surfaceContainerHighest,
                 textColor: AppColors.onSurface,
-                onTap: () {},
+                onTap: () {
+                  // TODO: Implement NFC scanning
+                },
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -231,7 +257,9 @@ class HomeDashboardScreen extends StatelessWidget {
                 label: 'Sync Now',
                 color: AppColors.secondaryContainer,
                 textColor: AppColors.onSecondaryContainer,
-                onTap: () {},
+                onTap: () {
+                  // TODO: Implement sync
+                },
               ),
             ),
           ],
@@ -240,8 +268,10 @@ class HomeDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentActivity(BuildContext context) {
-    final activities = DummyData.recentActivity;
+  Widget _buildRecentActivity(
+    BuildContext context,
+    List<TriageRecord> records,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -266,12 +296,25 @@ class HomeDashboardScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        ...activities.map(
-          (a) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: _ActivityCard(activity: a),
+        if (records.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Center(
+              child: Text(
+                'No recent activity',
+                style: AppTypography.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          )
+        else
+          ...records.map(
+            (record) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: _ActivityCard(record: record),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -381,16 +424,21 @@ class _QuickActionButton extends StatelessWidget {
 }
 
 class _ActivityCard extends StatelessWidget {
-  final DummyActivity activity;
+  final TriageRecord record;
 
-  const _ActivityCard({required this.activity});
+  const _ActivityCard({required this.record});
 
   @override
   Widget build(BuildContext context) {
+    final priorityColor = _getPriorityColor(record.priority);
+    final isSynced = record.syncStatus == SyncStatus.synced;
+
     return GestureDetector(
-      onTap: () => Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const PatientDetailsScreen())),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => PatientDetailsScreen(patientId: record.id),
+        ),
+      ),
       child: Container(
         height: 80,
         decoration: BoxDecoration(
@@ -403,7 +451,7 @@ class _ActivityCard extends StatelessWidget {
             Container(
               width: 12,
               decoration: BoxDecoration(
-                color: activity.triageColor,
+                color: priorityColor,
                 borderRadius: const BorderRadius.horizontal(
                   left: Radius.circular(12),
                 ),
@@ -420,14 +468,14 @@ class _ActivityCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          activity.patientName,
+                          record.patient.name,
                           style: AppTypography.textTheme.titleMedium?.copyWith(
                             color: AppColors.onSurface,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${activity.triageLevel} \u2022 ${activity.time}',
+                          '${_getPriorityLabel(record.priority)} \u2022 ${_formatTime(record.createdAt)}',
                           style: AppTypography.textTheme.bodyMedium?.copyWith(
                             color: AppColors.onSurfaceVariant,
                           ),
@@ -435,10 +483,8 @@ class _ActivityCard extends StatelessWidget {
                       ],
                     ),
                     Icon(
-                      activity.syncStatus == 'cloud_off'
-                          ? Icons.cloud_off
-                          : Icons.cloud_done,
-                      color: activity.syncColor,
+                      isSynced ? Icons.cloud_done : Icons.cloud_off,
+                      color: isSynced ? AppColors.primary : AppColors.error,
                     ),
                   ],
                 ),
@@ -448,5 +494,52 @@ class _ActivityCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _getPriorityColor(int priority) {
+    switch (priority) {
+      case 1:
+        return AppColors.error;
+      case 2:
+        return AppColors.p2Urgent;
+      case 3:
+        return AppColors.p3Delayed;
+      case 4:
+        return AppColors.inverseSurface;
+      default:
+        return AppColors.primary;
+    }
+  }
+
+  String _getPriorityLabel(int priority) {
+    switch (priority) {
+      case 1:
+        return 'P1 - Critical';
+      case 2:
+        return 'P2 - Urgent';
+      case 3:
+        return 'P3 - Delayed';
+      case 4:
+        return 'P4 - Expectant';
+      case 5:
+        return 'P5 - Minor';
+      default:
+        return 'P${priority.toString()}';
+    }
+  }
+
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
   }
 }

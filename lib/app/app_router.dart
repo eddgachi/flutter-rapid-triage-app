@@ -31,8 +31,11 @@ class AppRouter {
         builder: (context, state) => const PatientQueueScreen(),
       ),
       GoRoute(
-        path: '/patient',
-        builder: (context, state) => const PatientDetailsScreen(),
+        path: '/patient/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return PatientDetailsScreen(patientId: id);
+        },
       ),
       GoRoute(
         path: '/history',

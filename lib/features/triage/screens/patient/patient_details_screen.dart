@@ -1,17 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
+import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
+import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
+import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/patient_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/priority_badge.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_radius.dart';
-import '../../../../../core/theme/app_typography.dart';
-import '../../dummy/dummy_data.dart';
-import '../../widgets/shared/priority_badge.dart';
+class PatientDetailsScreen extends ConsumerStatefulWidget {
+  final String patientId;
 
-class PatientDetailsScreen extends StatelessWidget {
-  const PatientDetailsScreen({super.key});
+  const PatientDetailsScreen({super.key, required this.patientId});
+
+  @override
+  ConsumerState<PatientDetailsScreen> createState() =>
+      _PatientDetailsScreenState();
+}
+
+class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load patient data when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(patientControllerProvider.notifier).load(widget.patientId);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final patient = DummyData.patients.first;
+    final patientState = ref.watch(patientControllerProvider);
+    final patient = patientState.patient;
+
+    if (patientState.loading) {
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        ),
+      );
+    }
+
+    if (patient == null) {
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.person_off, size: 64, color: AppColors.outline),
+                const SizedBox(height: 16),
+                Text(
+                  'Patient not found',
+                  style: AppTypography.textTheme.headlineSmall?.copyWith(
+                    color: AppColors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'The patient record could not be loaded.',
+                  style: AppTypography.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => context.pop(),
+                  child: const Text('Go Back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -25,21 +91,23 @@ class PatientDetailsScreen extends StatelessWidget {
                   children: [
                     _buildOverviewBento(patient),
                     const SizedBox(height: 24),
-                    _buildTimeline(),
+                    _buildTimeline(patient),
                     const SizedBox(height: 24),
-                    _buildClinicalNotes(),
+                    _buildClinicalNotes(patient),
                   ],
                 ),
               ),
             ),
-            _buildStickyFooter(),
+            _buildStickyFooter(patient),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAppBar(BuildContext context, DummyPatient patient) {
+  Widget _buildAppBar(BuildContext context, TriageRecord patient) {
+    final priorityColor = _getPriorityColor(patient.priority);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       height: 56,
@@ -65,7 +133,7 @@ class PatientDetailsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  patient.name,
+                  patient.patient.name,
                   style: AppTypography.textTheme.titleLarge?.copyWith(
                     color: AppColors.primary,
                   ),
@@ -73,7 +141,7 @@ class PatientDetailsScreen extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  'ID: ${patient.id}',
+                  'ID: ${patient.id.substring(0, 8)}',
                   style: AppTypography.textTheme.labelMedium?.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -82,48 +150,90 @@ class PatientDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          PriorityBadge(label: patient.triageLevel, color: patient.triageColor),
+          PriorityBadge(
+            label: _getPriorityLabel(patient.priority),
+            color: priorityColor,
+          ),
           const SizedBox(width: 8),
-          const Icon(Icons.cloud_sync, color: AppColors.primary),
+          Icon(
+            patient.syncStatus == SyncStatus.synced
+                ? Icons.cloud_done
+                : Icons.cloud_off,
+            color: patient.syncStatus == SyncStatus.synced
+                ? AppColors.primary
+                : AppColors.error,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildOverviewBento(DummyPatient patient) {
+  Widget _buildOverviewBento(TriageRecord patient) {
+    final priorityColor = _getPriorityColor(patient.priority);
+
     return Column(
       children: [
         // Sync banner
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            border: Border.all(color: AppColors.outlineVariant),
+            color: patient.syncStatus == SyncStatus.synced
+                ? AppColors.primaryContainer
+                : AppColors.errorContainer,
+            border: Border.all(
+              color: patient.syncStatus == SyncStatus.synced
+                  ? AppColors.primary
+                  : AppColors.error,
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
-              const Icon(Icons.wifi_off, color: AppColors.secondary),
+              Icon(
+                patient.syncStatus == SyncStatus.synced
+                    ? Icons.cloud_done
+                    : Icons.wifi_off,
+                color: patient.syncStatus == SyncStatus.synced
+                    ? AppColors.primary
+                    : AppColors.error,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Local Storage Only - Pending Sync',
+                  patient.syncStatus == SyncStatus.synced
+                      ? 'Synced to Cloud'
+                      : 'Local Storage Only - Pending Sync',
                   style: AppTypography.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.secondary,
+                    color: patient.syncStatus == SyncStatus.synced
+                        ? AppColors.primary
+                        : AppColors.error,
                   ),
                 ),
               ),
-              TextButton(
-                onPressed: () {},
-                child: Text(
-                  'PUSH NOW',
-                  style: AppTypography.textTheme.labelLarge?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
+              if (patient.syncStatus != SyncStatus.synced)
+                TextButton(
+                  onPressed: () async {
+                    final success = await ref
+                        .read(patientControllerProvider.notifier)
+                        .markSynced();
+                    if (success && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Patient marked as synced'),
+                          backgroundColor: AppColors.primary,
+                        ),
+                      );
+                    }
+                  },
+                  child: Text(
+                    'SYNC NOW',
+                    style: AppTypography.textTheme.labelLarge?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -133,30 +243,29 @@ class PatientDetailsScreen extends StatelessWidget {
           children: [
             Expanded(
               child: _DetailCard(
-                title: 'Symptoms',
-                value: patient.symptoms,
-                subtitle: 'SPO2: 88% | BP: 90/60',
-                color: AppColors.error,
+                title: 'Priority',
+                value: _getPriorityLabel(patient.priority),
+                subtitle: 'Triage Level ${patient.priority}',
+                color: priorityColor,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _DetailCard(
-                title: 'Location',
-                value: patient.location,
-                subtitle: 'Lat: 40.7128 | Lon: -74.0060',
+                title: 'Age & Gender',
+                value: '${patient.patient.age ?? 'N/A'} yrs',
+                subtitle: patient.patient.gender ?? 'Not specified',
                 color: AppColors.secondary,
-                icon: Icons.location_on,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _DetailCard(
-                title: 'NFC ID',
-                value: patient.nfcId,
-                subtitle: 'Validated ${patient.createdAt}',
+                title: 'Status',
+                value: patient.status.toUpperCase(),
+                subtitle: _formatDate(patient.createdAt),
                 color: AppColors.primary,
-                icon: Icons.contactless,
+                icon: Icons.access_time,
               ),
             ),
           ],
@@ -165,8 +274,47 @@ class PatientDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeline() {
-    final events = DummyData.timelineEvents;
+  Widget _buildTimeline(TriageRecord patient) {
+    // Create timeline events from patient data
+    final events = [
+      TimelineEvent(
+        title: 'Patient Created',
+        description: 'Initial triage record created',
+        time: _formatTime(patient.createdAt),
+        dotColor: AppColors.primary,
+        cardColor: AppColors.surfaceContainerLow,
+      ),
+      if (patient.chiefComplaint.isNotEmpty)
+        TimelineEvent(
+          title: 'Chief Complaint Recorded',
+          description: patient.chiefComplaint,
+          time: _formatTime(patient.createdAt),
+          dotColor: AppColors.secondary,
+          cardColor: AppColors.surfaceContainerLow,
+        ),
+      if (patient.clinicalNotes != null && patient.clinicalNotes!.isNotEmpty)
+        TimelineEvent(
+          title: 'Clinical Notes Added',
+          description: patient.clinicalNotes!,
+          time: _formatTime(patient.createdAt),
+          dotColor: AppColors.tertiary,
+          cardColor: AppColors.surfaceContainerLow,
+        ),
+      TimelineEvent(
+        title: 'Sync Status',
+        description: patient.syncStatus == SyncStatus.synced
+            ? 'Patient record synced to cloud'
+            : 'Patient record pending sync',
+        time: _formatTime(patient.createdAt),
+        dotColor: patient.syncStatus == SyncStatus.synced
+            ? AppColors.primary
+            : AppColors.error,
+        cardColor: patient.syncStatus == SyncStatus.synced
+            ? AppColors.primaryContainer.withOpacity(0.1)
+            : AppColors.errorContainer.withOpacity(0.1),
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -263,7 +411,7 @@ class PatientDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildClinicalNotes() {
+  Widget _buildClinicalNotes(TriageRecord patient) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -291,7 +439,7 @@ class PatientDetailsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Patient presents with sharp trauma to the upper thoracic cavity. Significant bleeding controlled via pressure dressing. Breath sounds absent on the left side. Needle decompression performed at 12:42 PM with positive air release. Monitoring for tension pneumothorax recurrence.',
+                patient.clinicalNotes ?? 'No clinical notes recorded.',
                 style: AppTypography.textTheme.bodyLarge?.copyWith(
                   color: AppColors.onSurface,
                 ),
@@ -299,23 +447,23 @@ class PatientDetailsScreen extends StatelessWidget {
               const SizedBox(height: 16),
               const Divider(height: 1, color: AppColors.outlineVariant),
               const SizedBox(height: 16),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: List.generate(
-                    3,
-                    (i) => Container(
-                      width: 96,
-                      height: 96,
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      ),
-                      child: const Icon(Icons.image, color: AppColors.outline),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Chief Complaint',
+                    style: AppTypography.textTheme.labelMedium?.copyWith(
+                      color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                ),
+                  Text(
+                    patient.chiefComplaint,
+                    style: AppTypography.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.onSurface,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -324,7 +472,7 @@ class PatientDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStickyFooter() {
+  Widget _buildStickyFooter(TriageRecord patient) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -345,7 +493,9 @@ class PatientDetailsScreen extends StatelessWidget {
               child: SizedBox(
                 height: 48,
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    // TODO: Implement edit functionality
+                  },
                   icon: const Icon(Icons.edit, size: 20),
                   label: const Text('Edit'),
                   style: OutlinedButton.styleFrom(
@@ -363,12 +513,35 @@ class PatientDetailsScreen extends StatelessWidget {
               child: SizedBox(
                 height: 48,
                 child: FilledButton.icon(
-                  onPressed: () {},
+                  onPressed: patient.syncStatus == SyncStatus.synced
+                      ? null
+                      : () async {
+                          final success = await ref
+                              .read(patientControllerProvider.notifier)
+                              .markSynced();
+                          if (success && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Patient synced successfully'),
+                                backgroundColor: AppColors.primary,
+                              ),
+                            );
+                            setState(() {});
+                          }
+                        },
                   icon: const Icon(Icons.sync, size: 20),
-                  label: const Text('Retry Sync'),
+                  label: Text(
+                    patient.syncStatus == SyncStatus.synced
+                        ? 'Synced'
+                        : 'Retry Sync',
+                  ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.onPrimary,
+                    backgroundColor: patient.syncStatus == SyncStatus.synced
+                        ? AppColors.primaryContainer
+                        : AppColors.primary,
+                    foregroundColor: patient.syncStatus == SyncStatus.synced
+                        ? AppColors.primary
+                        : AppColors.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(9999),
                     ),
@@ -381,7 +554,45 @@ class PatientDetailsScreen extends StatelessWidget {
               child: SizedBox(
                 height: 48,
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () async {
+                    final shouldDelete = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Delete Patient'),
+                        content: const Text(
+                          'Are you sure you want to delete this patient record? This action cannot be undone.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.error,
+                            ),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (shouldDelete == true) {
+                      final success = await ref
+                          .read(patientControllerProvider.notifier)
+                          .delete();
+                      if (success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Patient deleted successfully'),
+                            backgroundColor: AppColors.primary,
+                          ),
+                        );
+                        context.pop();
+                      }
+                    }
+                  },
                   icon: const Icon(Icons.delete, size: 20),
                   label: const Text('Delete'),
                   style: OutlinedButton.styleFrom(
@@ -399,6 +610,74 @@ class PatientDetailsScreen extends StatelessWidget {
       ),
     );
   }
+
+  // Helper methods
+  Color _getPriorityColor(int priority) {
+    switch (priority) {
+      case 1:
+        return AppColors.error;
+      case 2:
+        return AppColors.p2Urgent;
+      case 3:
+        return AppColors.p3Delayed;
+      case 4:
+        return AppColors.inverseSurface;
+      default:
+        return AppColors.primary;
+    }
+  }
+
+  String _getPriorityLabel(int priority) {
+    switch (priority) {
+      case 1:
+        return 'P1 - Critical';
+      case 2:
+        return 'P2 - Urgent';
+      case 3:
+        return 'P3 - Delayed';
+      case 4:
+        return 'P4 - Expectant';
+      case 5:
+        return 'P5 - Minor';
+      default:
+        return 'P${priority.toString()}';
+    }
+  }
+
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+class TimelineEvent {
+  final String title;
+  final String description;
+  final String time;
+  final Color dotColor;
+  final Color cardColor;
+
+  const TimelineEvent({
+    required this.title,
+    required this.description,
+    required this.time,
+    required this.dotColor,
+    required this.cardColor,
+  });
 }
 
 class _DetailCard extends StatelessWidget {
