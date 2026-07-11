@@ -1,24 +1,71 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rapid_triage/app/app_providers.dart';
+import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
+import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
+import 'package:flutter_rapid_triage/core/theme/app_spacing.dart';
+import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/intake_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/custom_app_bar.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_radius.dart';
-import '../../../../../core/theme/app_spacing.dart';
-import '../../../../../core/theme/app_typography.dart';
-import '../../widgets/shared/custom_app_bar.dart';
-
-class NewTriageIntakeScreen extends StatefulWidget {
+class NewTriageIntakeScreen extends ConsumerStatefulWidget {
   const NewTriageIntakeScreen({super.key});
 
   @override
-  State<NewTriageIntakeScreen> createState() => _NewTriageIntakeScreenState();
+  ConsumerState<NewTriageIntakeScreen> createState() =>
+      _NewTriageIntakeScreenState();
 }
 
-class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
-  double _ageValue = 45;
+class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  final _nameController = TextEditingController();
+  final _conditionController = TextEditingController();
+  final _notesController = TextEditingController();
+
+  String? _selectedGender;
+  double _ageValue = 30;
   int? _selectedPriority;
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _conditionController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Listen for submission results
+    ref.listenManual<IntakeState>(intakeControllerProvider, (previous, next) {
+      if (next.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Patient record saved successfully'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        Navigator.pop(context);
+      }
+
+      if (next.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${next.error}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final intakeState = ref.watch(intakeControllerProvider);
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -34,36 +81,37 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
                     color: AppColors.onSurfaceVariant,
                     size: 20,
                   ),
-                  SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   Icon(Icons.account_circle, color: AppColors.onSurfaceVariant),
                 ],
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.marginMobile,
-                  AppSpacing.lg,
-                  AppSpacing.marginMobile,
-                  100,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(),
-                    const SizedBox(height: AppSpacing.lg),
-                    _buildPatientInfoSection(),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildClinicalSection(),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildPrioritySelection(),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildDeploymentSection(),
-                  ],
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.marginMobile,
+                    AppSpacing.lg,
+                    AppSpacing.marginMobile,
+                    120, // Extra space for sticky footer
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildPatientInfoSection(),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildClinicalSection(),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildPrioritySelection(),
+                    ],
+                  ),
                 ),
               ),
             ),
-            _buildStickyFooter(),
+            _buildStickyFooter(intakeState),
           ],
         ),
       ),
@@ -120,13 +168,20 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Full Name (Optional)',
+                'Full Name *',
                 style: AppTypography.textTheme.labelLarge?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              TextField(
+              TextFormField(
+                controller: _nameController,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter patient name';
+                  }
+                  return null;
+                },
                 decoration: InputDecoration(
                   hintText: 'John Doe',
                   filled: true,
@@ -139,6 +194,9 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderSide: BorderSide(color: AppColors.primary, width: 2),
+                  ),
+                  errorBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.error, width: 2),
                   ),
                 ),
               ),
@@ -177,6 +235,7 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
             value: _ageValue,
             min: 0,
             max: 100,
+            divisions: 100,
             activeColor: AppColors.primary,
             onChanged: (v) => setState(() => _ageValue = v),
           ),
@@ -218,8 +277,8 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
                 child: _GenderButton(
                   icon: Icons.male,
                   label: 'Male',
-                  isSelected: false,
-                  onTap: () {},
+                  isSelected: _selectedGender == 'Male',
+                  onTap: () => setState(() => _selectedGender = 'Male'),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -227,8 +286,8 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
                 child: _GenderButton(
                   icon: Icons.female,
                   label: 'Female',
-                  isSelected: false,
-                  onTap: () {},
+                  isSelected: _selectedGender == 'Female',
+                  onTap: () => setState(() => _selectedGender = 'Female'),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -236,8 +295,8 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
                 child: _GenderButton(
                   icon: Icons.question_mark,
                   label: 'Unknown',
-                  isSelected: false,
-                  onTap: () {},
+                  isSelected: _selectedGender == 'Unknown',
+                  onTap: () => setState(() => _selectedGender = 'Unknown'),
                 ),
               ),
             ],
@@ -275,19 +334,32 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Chief Complaint',
+                'Chief Complaint *',
                 style: AppTypography.textTheme.labelLarge?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              TextField(
+              TextFormField(
+                controller: _conditionController,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter chief complaint';
+                  }
+                  return null;
+                },
                 decoration: InputDecoration(
                   hintText: 'Shortness of breath, chest pain...',
                   filled: true,
                   fillColor: AppColors.surfaceVariant,
                   border: const UnderlineInputBorder(
                     borderSide: BorderSide(color: AppColors.outline),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.primary, width: 2),
+                  ),
+                  errorBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.error, width: 2),
                   ),
                 ),
               ),
@@ -304,7 +376,8 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              TextField(
+              TextFormField(
+                controller: _notesController,
                 maxLines: 4,
                 decoration: InputDecoration(
                   hintText: 'Observed trauma, vital signs, pupil response...',
@@ -312,6 +385,9 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
                   fillColor: AppColors.surfaceVariant,
                   border: const UnderlineInputBorder(
                     borderSide: BorderSide(color: AppColors.outline),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.primary, width: 2),
                   ),
                 ),
               ),
@@ -338,7 +414,7 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
-                  'Triage Priority',
+                  'Triage Priority *',
                   style: AppTypography.textTheme.titleMedium?.copyWith(
                     color: AppColors.onSurface,
                   ),
@@ -404,6 +480,7 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
           showIcon: false,
           priority: 5,
         ),
+        const SizedBox(height: AppSpacing.md),
       ],
     );
   }
@@ -424,7 +501,7 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primaryFixed.withOpacity(0.3)
+              ? AppColors.primaryFixed.withOpacity(0.2)
               : AppColors.surface,
           border: Border.all(
             color: isSelected ? color : AppColors.outlineVariant,
@@ -434,8 +511,9 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: color.withOpacity(0.2),
                     blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ]
               : null,
@@ -481,114 +559,14 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
               ),
             ),
             if (showIcon) Icon(Icons.priority_high, color: color, size: 32),
+            if (isSelected) Icon(Icons.check_circle, color: color, size: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDeploymentSection() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.location_on, color: AppColors.primary, size: 20),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Deployment Data',
-                style: AppTypography.textTheme.titleMedium?.copyWith(
-                  color: AppColors.onSurface,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(color: AppColors.outlineVariant),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Current Location',
-                            style: AppTypography.textTheme.labelMedium
-                                ?.copyWith(color: AppColors.onSurfaceVariant),
-                          ),
-                          Icon(
-                            Icons.refresh,
-                            size: 20,
-                            color: AppColors.primary,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        '40.7128° N, 74.0060° W',
-                        style: AppTypography.textTheme.titleMedium?.copyWith(
-                          color: AppColors.onSurface,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    height: AppSpacing.touchTargetMin,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryContainer,
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.nfc,
-                          color: AppColors.onPrimaryContainer,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          'Scan NFC\nWristband',
-                          textAlign: TextAlign.center,
-                          style: AppTypography.textTheme.titleMedium?.copyWith(
-                            color: AppColors.onPrimaryContainer,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStickyFooter() {
+  Widget _buildStickyFooter(IntakeState intakeState) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -607,9 +585,56 @@ class _NewTriageIntakeScreenState extends State<NewTriageIntakeScreen> {
           width: double.infinity,
           height: AppSpacing.touchTargetMin,
           child: FilledButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.save),
-            label: const Text('Save Locally'),
+            onPressed: intakeState.isLoading
+                ? null
+                : () async {
+                    // Validate form
+                    if (!_formKey.currentState!.validate()) {
+                      return;
+                    }
+
+                    // Validate priority
+                    if (_selectedPriority == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please select a triage priority'),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Get the controller
+                    final controller = ref.read(
+                      intakeControllerProvider.notifier,
+                    );
+
+                    // Submit the form
+                    await controller.submit(
+                      patientName: _nameController.text.trim(),
+                      age: _ageValue.round(),
+                      gender: _selectedGender,
+                      chiefComplaint: _conditionController.text.trim(),
+                      clinicalNotes: _notesController.text.trim().isEmpty
+                          ? null
+                          : _notesController.text.trim(),
+                      priority: _selectedPriority!,
+                      status: '',
+                    );
+                  },
+            icon: intakeState.isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.save),
+            label: Text(
+              intakeState.isLoading ? "Saving..." : "Save Patient Record",
+            ),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.onPrimary,
@@ -652,6 +677,7 @@ class _GenderButton extends StatelessWidget {
             color: isSelected
                 ? AppColors.secondaryContainer
                 : AppColors.outlineVariant,
+            width: isSelected ? 2 : 1,
           ),
         ),
         child: Column(
@@ -662,6 +688,7 @@ class _GenderButton extends StatelessWidget {
               color: isSelected
                   ? AppColors.onSecondaryContainer
                   : AppColors.onSurfaceVariant,
+              size: 28,
             ),
             const SizedBox(height: 4),
             Text(
@@ -670,6 +697,7 @@ class _GenderButton extends StatelessWidget {
                 color: isSelected
                     ? AppColors.onSecondaryContainer
                     : AppColors.onSurfaceVariant,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ],

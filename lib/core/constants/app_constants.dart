@@ -20,11 +20,6 @@ class TriageLevel {
   static const String p5 = 'P5';
 }
 
-class SyncStatus {
-  SyncStatus._();
+enum PatientStatus { pending, inTransit }
 
-  static const String synced = 'Synced';
-  static const String pending = 'Pending';
-  static const String failed = 'Failed';
-  static const String offline = 'Offline';
-}
+enum SyncStatus { pending, syncing, synced, failed }

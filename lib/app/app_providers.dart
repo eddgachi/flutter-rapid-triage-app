@@ -1,3 +1,5 @@
+import 'package:flutter_rapid_triage/features/triage/controllers/intake_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/repositories/triage_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/services/api_service.dart';
@@ -15,3 +17,10 @@ final connectivityServiceProvider = Provider((ref) => ConnectivityService());
 final locationServiceProvider = Provider((ref) => LocationService());
 
 final fakeAuthServiceProvider = Provider((ref) => FakeAuthService());
+
+final triageRepositoryProvider = Provider(
+  (ref) => TriageRepository(hiveService: ref.read(hiveServiceProvider)),
+);
+
+final intakeControllerProvider =
+    NotifierProvider<IntakeController, IntakeState>(IntakeController.new);
