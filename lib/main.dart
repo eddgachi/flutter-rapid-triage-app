@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rapid_triage/app/app_router.dart';
 
-import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
 void main() {
