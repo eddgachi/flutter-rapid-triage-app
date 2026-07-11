@@ -1,4 +1,5 @@
-import 'package:flutter_rapid_triage/features/triage/controllers/intake_controller.dart';
+import 'package:flutter_rapid_triage/app/app_initializer.dart';
+import 'package:flutter_rapid_triage/core/services/permission_service.dart';
 import 'package:flutter_rapid_triage/features/triage/repositories/triage_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,19 +9,33 @@ import '../core/services/fake_auth_service.dart';
 import '../core/services/hive_service.dart';
 import '../core/services/location_service.dart';
 
-final hiveServiceProvider = Provider((ref) => HiveService());
+// Service Providers - using the initialized instances
+final hiveServiceProvider = Provider<HiveService>((ref) {
+  return AppInitializer.hiveService;
+});
 
-final apiServiceProvider = Provider((ref) => ApiService());
+final apiServiceProvider = Provider<ApiService>((ref) {
+  return AppInitializer.apiService;
+});
 
-final connectivityServiceProvider = Provider((ref) => ConnectivityService());
+final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
+  return AppInitializer.connectivityService;
+});
 
-final locationServiceProvider = Provider((ref) => LocationService());
+final authServiceProvider = Provider<FakeAuthService>((ref) {
+  return AppInitializer.authService;
+});
 
-final fakeAuthServiceProvider = Provider((ref) => FakeAuthService());
+final locationServiceProvider = Provider<LocationService>((ref) {
+  return AppInitializer.locationService;
+});
 
-final triageRepositoryProvider = Provider(
-  (ref) => TriageRepository(hiveService: ref.read(hiveServiceProvider)),
-);
+final permissionServiceProvider = Provider<PermissionService>((ref) {
+  return AppInitializer.permissionService;
+});
 
-final intakeControllerProvider =
-    NotifierProvider<IntakeController, IntakeState>(IntakeController.new);
+// Repository Providers
+final triageRepositoryProvider = Provider<TriageRepository>((ref) {
+  final hiveService = ref.watch(hiveServiceProvider);
+  return TriageRepository(hiveService: hiveService);
+});

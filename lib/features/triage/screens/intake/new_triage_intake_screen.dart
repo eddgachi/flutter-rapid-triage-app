@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_rapid_triage/app/app_providers.dart';
 import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
 import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
 import 'package:flutter_rapid_triage/core/theme/app_spacing.dart';
@@ -76,6 +75,9 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Location status indicator
+                  _buildLocationStatus(intakeState),
+                  const SizedBox(width: AppSpacing.sm),
                   Icon(
                     Icons.cloud_sync,
                     color: AppColors.onSurfaceVariant,
@@ -106,6 +108,8 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                       _buildClinicalSection(),
                       const SizedBox(height: AppSpacing.md),
                       _buildPrioritySelection(),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildLocationSection(intakeState),
                     ],
                   ),
                 ),
@@ -115,6 +119,44 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLocationStatus(IntakeState state) {
+    if (state.isLocationLoading) {
+      return const SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+        ),
+      );
+    }
+
+    if (state.locationError != null) {
+      return Tooltip(
+        message: state.locationError,
+        child: const Icon(Icons.location_off, color: AppColors.error, size: 20),
+      );
+    }
+
+    if (state.currentLocation != null) {
+      return Tooltip(
+        message:
+            'Location captured: ${state.currentLocation!.latitude}, ${state.currentLocation!.longitude}',
+        child: const Icon(
+          Icons.location_on,
+          color: AppColors.primary,
+          size: 20,
+        ),
+      );
+    }
+
+    return const Icon(
+      Icons.location_off,
+      color: AppColors.onSurfaceVariant,
+      size: 20,
     );
   }
 
@@ -566,6 +608,115 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
     );
   }
 
+  Widget _buildLocationSection(IntakeState state) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.outlineVariant.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.location_on, color: AppColors.primary, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Location',
+                style: AppTypography.textTheme.titleMedium?.copyWith(
+                  color: AppColors.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          if (state.isLocationLoading)
+            Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Getting location...',
+                  style: AppTypography.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            )
+          else if (state.locationError != null)
+            Row(
+              children: [
+                const Icon(Icons.error, color: AppColors.error, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    state.locationError!,
+                    style: AppTypography.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else if (state.currentLocation != null)
+            Row(
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    'Location captured: ${state.currentLocation!.latitude.toStringAsFixed(4)}, ${state.currentLocation!.longitude.toStringAsFixed(4)}',
+                    style: AppTypography.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                const Icon(
+                  Icons.location_off,
+                  color: AppColors.onSurfaceVariant,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Location not available',
+                  style: AppTypography.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Location will be automatically captured when you save the record.',
+            style: AppTypography.textTheme.bodySmall?.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStickyFooter(IntakeState intakeState) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -619,7 +770,8 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                           ? null
                           : _notesController.text.trim(),
                       priority: _selectedPriority!,
-                      status: '',
+                      status:
+                          'pending', // Fixed: Use 'pending' instead of empty string
                     );
                   },
             icon: intakeState.isLoading

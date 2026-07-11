@@ -22,4 +22,9 @@ class TriageLevel {
 
 enum PatientStatus { pending, inTransit }
 
-enum SyncStatus { pending, syncing, synced, failed }
+enum SyncStatus {
+  pending, // Waiting to be synced
+  synced, // Successfully synced
+  failed, // Failed to sync
+  syncing, // Currently syncing
+}
