@@ -4,6 +4,8 @@ import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
 import 'package:flutter_rapid_triage/core/theme/app_spacing.dart';
 import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/intake_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/sync_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/connectivity_indicator.dart';
 import 'package:flutter_rapid_triage/features/triage/widgets/shared/custom_app_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -75,13 +77,26 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Location status indicator
                   _buildLocationStatus(intakeState),
                   const SizedBox(width: AppSpacing.sm),
-                  Icon(
-                    Icons.cloud_sync,
-                    color: AppColors.onSurfaceVariant,
-                    size: 20,
+                  GestureDetector(
+                    onTap: () async {
+                      await ref.read(syncControllerProvider.notifier).syncNow();
+                      if (context.mounted) {
+                        final s = ref.read(syncControllerProvider);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(s.isConnected
+                                ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
+                                : 'No internet connection'),
+                            backgroundColor: s.isConnected
+                                ? AppColors.primary
+                                : AppColors.error,
+                          ),
+                        );
+                      }
+                    },
+                    child: const ConnectivityIndicator(),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Icon(Icons.account_circle, color: AppColors.onSurfaceVariant),

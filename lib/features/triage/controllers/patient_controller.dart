@@ -1,5 +1,7 @@
 import 'package:flutter_rapid_triage/app/app_providers.dart';
 import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
+import 'package:flutter_rapid_triage/core/services/connectivity_service.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/sync_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
 import 'package:flutter_rapid_triage/features/triage/repositories/triage_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,6 +39,8 @@ class PatientController extends Notifier<PatientState> {
   PatientState build() => const PatientState();
 
   TriageRepository get _repository => ref.read(triageRepositoryProvider);
+  ConnectivityService get _connectivity =>
+      ref.read(connectivityServiceProvider);
 
   // ==================== LOAD PATIENT ====================
   Future<void> load(String id) async {
@@ -74,6 +78,69 @@ class PatientController extends Notifier<PatientState> {
     }
   }
 
+  // ==================== SYNC RECORD ====================
+  /// Attempts to sync the current record, detecting connectivity and setting
+  /// the appropriate syncStatus and syncError.
+  Future<bool> syncRecord() async {
+    if (state.patient == null) return false;
+
+    try {
+      state = state.copyWith(loading: true, error: null);
+
+      final connected = await _connectivity.isConnected();
+      if (!connected) {
+        final updated = state.patient!.copyWith(
+          syncStatus: SyncStatus.failed,
+          syncError: 'No internet connection',
+        );
+        await _repository.update(updated);
+        state = state.copyWith(loading: false, patient: updated);
+        return false;
+      }
+
+      // Set as syncing
+      await _repository.updateSyncStatus(state.patient!.id, SyncStatus.syncing);
+      final syncing = state.patient!.copyWith(syncStatus: SyncStatus.syncing);
+      state = state.copyWith(patient: syncing);
+
+      try {
+        // Attempt API call via sync service
+        final syncController = ref.read(syncControllerProvider.notifier);
+        final result = await syncController.syncRecord(state.patient!.id);
+
+        if (result) {
+          final updated = state.patient!.copyWith(
+            syncStatus: SyncStatus.synced,
+            syncError: null,
+          );
+          await _repository.update(updated);
+          state = state.copyWith(loading: false, patient: updated);
+          return true;
+        } else {
+          final updated = state.patient!.copyWith(
+            syncStatus: SyncStatus.failed,
+            syncError: 'Failed to sync record',
+          );
+          await _repository.update(updated);
+          state = state.copyWith(loading: false, patient: updated);
+          return false;
+        }
+      } catch (e) {
+        final updated = state.patient!.copyWith(
+          syncStatus: SyncStatus.failed,
+          syncError:
+              'Sync error: ${e.toString().length > 80 ? e.toString().substring(0, 80) : e.toString()}',
+        );
+        await _repository.update(updated);
+        state = state.copyWith(loading: false, patient: updated);
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(loading: false, error: e.toString());
+      return false;
+    }
+  }
+
   // ==================== MARK AS SYNCED ====================
   Future<bool> markSynced() async {
     if (state.patient == null) return false;
@@ -81,7 +148,10 @@ class PatientController extends Notifier<PatientState> {
     try {
       state = state.copyWith(loading: true, error: null);
 
-      final updated = state.patient!.copyWith(syncStatus: SyncStatus.synced);
+      final updated = state.patient!.copyWith(
+        syncStatus: SyncStatus.synced,
+        syncError: null,
+      );
 
       await _repository.update(updated);
 
@@ -101,7 +171,10 @@ class PatientController extends Notifier<PatientState> {
     try {
       state = state.copyWith(loading: true, error: null);
 
-      final updated = state.patient!.copyWith(syncStatus: SyncStatus.pending);
+      final updated = state.patient!.copyWith(
+        syncStatus: SyncStatus.pending,
+        syncError: null,
+      );
 
       await _repository.update(updated);
 
@@ -115,13 +188,16 @@ class PatientController extends Notifier<PatientState> {
   }
 
   // ==================== MARK AS FAILED ====================
-  Future<bool> markFailed() async {
+  Future<bool> markFailed({String? reason}) async {
     if (state.patient == null) return false;
 
     try {
       state = state.copyWith(loading: true, error: null);
 
-      final updated = state.patient!.copyWith(syncStatus: SyncStatus.failed);
+      final updated = state.patient!.copyWith(
+        syncStatus: SyncStatus.failed,
+        syncError: reason ?? 'Sync failed',
+      );
 
       await _repository.update(updated);
 
@@ -176,6 +252,7 @@ class PatientController extends Notifier<PatientState> {
       'priorityLabel': _getPriorityLabel(patient.priority),
       'status': patient.status,
       'syncStatus': patient.syncStatus.name,
+      'syncError': patient.syncError,
       'chiefComplaint': patient.chiefComplaint,
       'clinicalNotes': patient.clinicalNotes,
       'createdAt': patient.createdAt,

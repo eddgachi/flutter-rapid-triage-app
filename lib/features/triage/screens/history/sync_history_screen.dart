@@ -3,8 +3,10 @@ import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
 import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
 import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/history_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/sync_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
 import 'package:flutter_rapid_triage/features/triage/widgets/shared/bottom_nav_bar.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/connectivity_indicator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SyncHistoryScreen extends ConsumerWidget {
@@ -31,7 +33,7 @@ class SyncHistoryScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(),
+            _buildAppBar(context, ref),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 100),
@@ -104,10 +106,10 @@ class SyncHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      height: 48,
+      height: 56,
       decoration: const BoxDecoration(
         color: AppColors.surface,
         boxShadow: [
@@ -124,13 +126,32 @@ class SyncHistoryScreen extends ConsumerWidget {
           const SizedBox(width: 8),
           Text(
             'RapidTriage',
-            style: AppTypography.textTheme.headlineSmall?.copyWith(
+            style: AppTypography.textTheme.titleMedium?.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
           const Spacer(),
-          const Icon(Icons.cloud_sync, color: AppColors.primary),
+          GestureDetector(
+            onTap: () async {
+              await ref.read(syncControllerProvider.notifier).syncNow();
+              ref.invalidate(historyControllerProvider);
+              if (context.mounted) {
+                final s = ref.read(syncControllerProvider);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(s.isConnected
+                        ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
+                        : 'No internet connection'),
+                    backgroundColor: s.isConnected
+                        ? AppColors.primary
+                        : AppColors.error,
+                  ),
+                );
+              }
+            },
+            child: const ConnectivityIndicator(),
+          ),
         ],
       ),
     );

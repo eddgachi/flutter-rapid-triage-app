@@ -5,11 +5,13 @@ import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
 import 'package:flutter_rapid_triage/core/theme/app_spacing.dart';
 import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/history_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/home_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/queue_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/sync_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
 import 'package:flutter_rapid_triage/features/triage/screens/patient/patient_details_screen.dart';
 import 'package:flutter_rapid_triage/features/triage/widgets/shared/bottom_nav_bar.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/connectivity_indicator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -25,7 +27,6 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Trigger initial sync
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(syncControllerProvider.notifier).syncNow();
     });
@@ -33,18 +34,18 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final queueState = ref.watch(queueControllerProvider);
-    final historyState = ref.watch(historyControllerProvider);
+    final homeState = ref.watch(homeControllerProvider);
+
     final syncState = ref.watch(syncControllerProvider);
 
-    // Get counts
-    final counts = ref.read(queueControllerProvider.notifier).getCounts();
-    final criticalCount = counts['critical'] ?? 0;
-    final pendingCount = counts['pending'] ?? 0;
-    final syncedCount = counts['synced'] ?? 0;
+    // Get counts from HomeState (live counts from repository)
+    final pendingCount = homeState.pendingPatients;
+    final syncedCount = homeState.syncedPatients;
+    final failedCount = homeState.failedPatients;
+    final criticalCount = homeState.criticalPatients;
 
     // Get recent activity (latest 5 records)
-    final recentRecords = historyState.records.take(5).toList();
+    final recentRecords = homeState.recentPatients;
 
     return Scaffold(
       body: SafeArea(
@@ -63,11 +64,12 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildWelcome(syncState),
+                    _buildWelcome(homeState, syncState),
                     const SizedBox(height: AppSpacing.lg),
                     _buildStatsGrid(
                       pendingCount: pendingCount,
                       syncedCount: syncedCount,
+                      failedCount: failedCount,
                       criticalCount: criticalCount,
                       syncState: syncState,
                     ),
@@ -123,44 +125,30 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
             ],
           ),
           const Spacer(),
-          Consumer(
-            builder: (context, ref, child) {
-              final syncState = ref.watch(syncControllerProvider);
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: syncState.isConnected
-                      ? AppColors.secondaryContainer.withOpacity(0.3)
-                      : AppColors.errorContainer.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      syncState.isConnected
-                          ? Icons.cloud_done
-                          : Icons.cloud_off,
-                      size: 18,
-                      color: syncState.isConnected
-                          ? AppColors.onSecondaryContainer
-                          : AppColors.error,
+          GestureDetector(
+            onTap: () async {
+              final syncController = ref.read(syncControllerProvider.notifier);
+              await syncController.syncNow();
+              ref.invalidate(homeControllerProvider);
+              ref.invalidate(queueControllerProvider);
+              ref.invalidate(historyControllerProvider);
+              if (context.mounted) {
+                final s = ref.read(syncControllerProvider);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      s.isConnected
+                          ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
+                          : 'No internet connection',
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      syncState.isConnected
-                          ? '${syncState.syncedCount} Synced'
-                          : 'Offline',
-                      style: AppTypography.textTheme.labelMedium?.copyWith(
-                        color: syncState.isConnected
-                            ? AppColors.onSecondaryContainer
-                            : AppColors.error,
-                      ),
-                    ),
-                  ],
-                ),
-              );
+                    backgroundColor: s.isConnected
+                        ? AppColors.primary
+                        : AppColors.error,
+                  ),
+                );
+              }
             },
+            child: const ConnectivityIndicator(),
           ),
         ],
       ),
@@ -188,7 +176,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
     );
   }
 
-  Widget _buildWelcome(SyncState syncState) {
+  Widget _buildWelcome(HomeState homeState, SyncState syncState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -247,6 +235,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   Widget _buildStatsGrid({
     required int pendingCount,
     required int syncedCount,
+    required int failedCount,
     required int criticalCount,
     required SyncState syncState,
   }) {
@@ -278,13 +267,28 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            _DashboardCard(
-              label: 'Critical Patients',
-              value: criticalCount.toString(),
-              icon: Icons.warning_rounded,
-              iconColor: AppColors.error,
-              bgColor: AppColors.errorContainer,
-              isFullWidth: true,
+            Row(
+              children: [
+                Expanded(
+                  child: _DashboardCard(
+                    label: 'Failed Sync',
+                    value: failedCount.toString(),
+                    icon: Icons.error,
+                    iconColor: AppColors.error,
+                    bgColor: AppColors.errorContainer,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _DashboardCard(
+                    label: 'Critical',
+                    value: criticalCount.toString(),
+                    icon: Icons.warning_rounded,
+                    iconColor: AppColors.error,
+                    bgColor: AppColors.errorContainer,
+                  ),
+                ),
+              ],
             ),
           ],
         );
@@ -348,19 +352,17 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                 color: AppColors.secondaryContainer,
                 textColor: AppColors.onSecondaryContainer,
                 onTap: () async {
-                  final syncController = ref.read(
-                    syncControllerProvider.notifier,
-                  );
-                  await syncController.syncNow();
+                  await ref.read(syncControllerProvider.notifier).syncNow();
                   if (mounted) {
+                    final s = ref.read(syncControllerProvider);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          syncController.state.isConnected
-                              ? 'Sync completed: ${syncController.state.syncedCount} synced, ${syncController.state.failedCount} failed'
+                          s.isConnected
+                              ? 'Sync completed: ${s.syncedCount} synced, ${s.failedCount} failed'
                               : 'No internet connection',
                         ),
-                        backgroundColor: syncController.state.isConnected
+                        backgroundColor: s.isConnected
                             ? AppColors.primary
                             : AppColors.error,
                       ),
@@ -433,7 +435,6 @@ class _DashboardCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final Color bgColor;
-  final bool isFullWidth;
 
   const _DashboardCard({
     required this.label,
@@ -441,21 +442,18 @@ class _DashboardCard extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.bgColor,
-    this.isFullWidth = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 128,
-      width: isFullWidth ? double.infinity : null,
+      width: null,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: isFullWidth ? AppColors.error : AppColors.outlineVariant,
-        ),
+        border: Border.all(color: AppColors.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,9 +462,7 @@ class _DashboardCard extends StatelessWidget {
           Text(
             label,
             style: AppTypography.textTheme.labelLarge?.copyWith(
-              color: isFullWidth
-                  ? AppColors.onErrorContainer
-                  : AppColors.onSurfaceVariant,
+              color: AppColors.onSurfaceVariant,
             ),
           ),
           Row(
@@ -475,7 +471,7 @@ class _DashboardCard extends StatelessWidget {
               Text(
                 value,
                 style: AppTypography.textTheme.headlineMedium?.copyWith(
-                  color: isFullWidth ? AppColors.error : AppColors.primary,
+                  color: AppColors.primary,
                 ),
               ),
               Icon(icon, size: 40, color: iconColor.withOpacity(0.2)),

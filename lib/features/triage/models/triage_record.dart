@@ -16,34 +16,20 @@ class TriageRecord {
     this.nfcTag,
     required this.createdAt,
     required this.syncStatus,
+    this.syncError,
   }) : id = id ?? const Uuid().v4();
 
   final String id;
-
   final Patient patient;
-
-  /// Why the patient is being triaged.
   final String chiefComplaint;
-
-  /// Additional notes entered by the paramedic.
   final String? clinicalNotes;
-
-  /// 1 = Critical
-  /// 5 = Lowest priority
   final int priority;
-
-  /// Pending | In-Transit
   final String status;
-
-  /// GPS coordinates if captured.
   final TriageLocation? location;
-
-  /// NFC wristband/card identifier.
   final String? nfcTag;
-
   final DateTime createdAt;
-
   final SyncStatus syncStatus;
+  final String? syncError;
 
   Map<String, dynamic> toJson() {
     return {
@@ -57,6 +43,7 @@ class TriageRecord {
       'nfcTag': nfcTag,
       'createdAt': createdAt.toIso8601String(),
       'syncStatus': syncStatus.name,
+      'syncError': syncError,
     };
   }
 
@@ -76,6 +63,7 @@ class TriageRecord {
       syncStatus: SyncStatus.values.firstWhere(
         (e) => e.name == json['syncStatus'],
       ),
+      syncError: json['syncError'] as String?,
     );
   }
 
@@ -90,6 +78,8 @@ class TriageRecord {
     String? nfcTag,
     DateTime? createdAt,
     SyncStatus? syncStatus,
+    String? syncError,
+    Object? clearSyncError,
   }) {
     return TriageRecord(
       id: id ?? this.id,
@@ -102,6 +92,7 @@ class TriageRecord {
       nfcTag: nfcTag ?? this.nfcTag,
       createdAt: createdAt ?? this.createdAt,
       syncStatus: syncStatus ?? this.syncStatus,
+      syncError: syncError ?? this.syncError,
     );
   }
 }

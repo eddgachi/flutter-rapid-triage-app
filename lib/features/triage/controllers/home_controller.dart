@@ -8,6 +8,7 @@ class HomeState {
     this.totalPatients = 0,
     this.pendingPatients = 0,
     this.syncedPatients = 0,
+    this.failedPatients = 0,
     this.criticalPatients = 0,
     this.recentPatients = const [],
   });
@@ -16,6 +17,7 @@ class HomeState {
   final int totalPatients;
   final int pendingPatients;
   final int syncedPatients;
+  final int failedPatients;
   final int criticalPatients;
   final List<TriageRecord> recentPatients;
 
@@ -24,6 +26,7 @@ class HomeState {
     int? totalPatients,
     int? pendingPatients,
     int? syncedPatients,
+    int? failedPatients,
     int? criticalPatients,
     List<TriageRecord>? recentPatients,
   }) {
@@ -32,6 +35,7 @@ class HomeState {
       totalPatients: totalPatients ?? this.totalPatients,
       pendingPatients: pendingPatients ?? this.pendingPatients,
       syncedPatients: syncedPatients ?? this.syncedPatients,
+      failedPatients: failedPatients ?? this.failedPatients,
       criticalPatients: criticalPatients ?? this.criticalPatients,
       recentPatients: recentPatients ?? this.recentPatients,
     );
@@ -45,15 +49,16 @@ class HomeController extends Notifier<HomeState> {
     return const HomeState();
   }
 
-  Future<void> load() async {
+  void load() {
     final repo = ref.read(triageRepositoryProvider);
 
     final patients = repo.getAll();
 
-    state = state.copyWith(
+    state = HomeState(
       totalPatients: repo.totalPatients(),
       pendingPatients: repo.pendingCount(),
       syncedPatients: repo.syncedCount(),
+      failedPatients: repo.getFailedSync().length,
       criticalPatients: repo.criticalCount(),
       recentPatients: patients.take(5).toList(),
     );
@@ -61,3 +66,8 @@ class HomeController extends Notifier<HomeState> {
 
   Future<void> refresh() async => load();
 }
+
+// Provider definition
+final homeControllerProvider = NotifierProvider<HomeController, HomeState>(
+  HomeController.new,
+);

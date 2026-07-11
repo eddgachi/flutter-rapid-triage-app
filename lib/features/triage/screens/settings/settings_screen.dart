@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
+import '../../controllers/sync_controller.dart';
 import '../../widgets/shared/bottom_nav_bar.dart';
+import '../../widgets/shared/connectivity_indicator.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(),
+            _buildAppBar(context, ref),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
@@ -206,10 +209,10 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      height: 48,
+      height: 56,
       decoration: const BoxDecoration(
         color: AppColors.surface,
         boxShadow: [
@@ -226,13 +229,31 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             'RapidTriage',
-            style: AppTypography.textTheme.headlineSmall?.copyWith(
+            style: AppTypography.textTheme.titleMedium?.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
           const Spacer(),
-          const Icon(Icons.cloud_sync, color: AppColors.onSurfaceVariant),
+          GestureDetector(
+            onTap: () async {
+              await ref.read(syncControllerProvider.notifier).syncNow();
+              if (context.mounted) {
+                final s = ref.read(syncControllerProvider);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(s.isConnected
+                        ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
+                        : 'No internet connection'),
+                    backgroundColor: s.isConnected
+                        ? AppColors.primary
+                        : AppColors.error,
+                  ),
+                );
+              }
+            },
+            child: const ConnectivityIndicator(),
+          ),
         ],
       ),
     );

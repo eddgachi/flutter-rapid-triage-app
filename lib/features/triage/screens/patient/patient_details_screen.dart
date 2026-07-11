@@ -1,10 +1,18 @@
+// lib/features/triage/screens/patient/patient_details_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
 import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
 import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
 import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/history_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/home_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/patient_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/queue_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/sync_controller.dart';
+import 'package:flutter_rapid_triage/features/triage/models/patient.dart'
+    as patient_model;
 import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/connectivity_indicator.dart';
 import 'package:flutter_rapid_triage/features/triage/widgets/shared/priority_badge.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,7 +31,6 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    // Load patient data when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(patientControllerProvider.notifier).load(widget.patientId);
     });
@@ -32,9 +39,10 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final patientState = ref.watch(patientControllerProvider);
+    final syncState = ref.watch(syncControllerProvider);
     final patient = patientState.patient;
 
-    if (patientState.loading) {
+    if (patientState.loading && patient == null) {
       return Scaffold(
         body: SafeArea(
           child: Center(
@@ -68,7 +76,13 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () {
+                    // Invalidate providers to refresh data when returning
+                    ref.invalidate(homeControllerProvider);
+                    ref.invalidate(queueControllerProvider);
+                    ref.invalidate(historyControllerProvider);
+                    context.go('/queue'); // Fixed: Use go() instead of pop()
+                  },
                   child: const Text('Go Back'),
                 ),
               ],
@@ -82,14 +96,24 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(context, patient),
+            _buildAppBar(context, patient, syncState),
+            if (!syncState.isConnected) _buildOfflineBar(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  140,
+                ), // Increased bottom padding
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildSyncStatusBanner(patient),
+                    const SizedBox(height: 16),
                     _buildOverviewBento(patient),
+                    const SizedBox(height: 24),
+                    _buildLocationSection(patient),
                     const SizedBox(height: 24),
                     _buildTimeline(patient),
                     const SizedBox(height: 24),
@@ -98,19 +122,45 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                 ),
               ),
             ),
-            _buildStickyFooter(patient),
+            _buildStickyFooter(patient, patientState),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAppBar(BuildContext context, TriageRecord patient) {
+  Widget _buildOfflineBar() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: AppColors.errorContainer,
+      child: Row(
+        children: [
+          Icon(Icons.wifi_off, color: AppColors.error, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Offline Mode - Changes will sync when connected',
+              style: AppTypography.textTheme.bodySmall?.copyWith(
+                color: AppColors.error,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppBar(
+    BuildContext context,
+    TriageRecord patient,
+    SyncState syncState,
+  ) {
     final priorityColor = _getPriorityColor(patient.priority);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      height: 64,
       decoration: const BoxDecoration(
         color: AppColors.surface,
         boxShadow: [
@@ -123,9 +173,17 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
       ),
       child: Row(
         children: [
+          // Fixed back button - using context.pop() from go_router
           IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.primary),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              // Invalidate providers to refresh data when returning
+              ref.invalidate(homeControllerProvider);
+              ref.invalidate(queueControllerProvider);
+              ref.invalidate(historyControllerProvider);
+              // Use go_router's pop method
+              context.go('/queue');
+            },
           ),
           Expanded(
             child: Column(
@@ -141,7 +199,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  'ID: ${patient.id.substring(0, 8)}',
+                  'ID: ${patient.id.length > 8 ? patient.id.substring(0, 8) : patient.id}',
                   style: AppTypography.textTheme.labelMedium?.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -155,14 +213,142 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
             color: priorityColor,
           ),
           const SizedBox(width: 8),
-          Icon(
-            patient.syncStatus == SyncStatus.synced
-                ? Icons.cloud_done
-                : Icons.cloud_off,
-            color: patient.syncStatus == SyncStatus.synced
-                ? AppColors.primary
-                : AppColors.error,
+          // Connectivity indicator
+          const ConnectivityIndicator(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSyncStatusBanner(TriageRecord patient) {
+    if (patient.syncStatus == SyncStatus.synced) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.primaryContainer,
+          border: Border.all(color: AppColors.primary),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.cloud_done, color: AppColors.primary, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Synced to Cloud',
+                style: AppTypography.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Failed or pending
+    final isFailed = patient.syncStatus == SyncStatus.failed;
+    final isSyncing = patient.syncStatus == SyncStatus.syncing;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isFailed
+            ? AppColors.errorContainer
+            : AppColors.surfaceContainerLow,
+        border: Border.all(
+          color: isFailed
+              ? AppColors.error
+              : isSyncing
+              ? AppColors.primary
+              : AppColors.outlineVariant,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isFailed
+                    ? Icons.error
+                    : isSyncing
+                    ? Icons.sync
+                    : Icons.cloud_off,
+                color: isFailed
+                    ? AppColors.error
+                    : isSyncing
+                    ? AppColors.primary
+                    : AppColors.error,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  isFailed
+                      ? 'Sync Failed'
+                      : isSyncing
+                      ? 'Syncing...'
+                      : 'Local Storage Only',
+                  style: AppTypography.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isFailed ? AppColors.error : AppColors.onSurface,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: isSyncing
+                    ? null
+                    : () async {
+                        final controller = ref.read(
+                          patientControllerProvider.notifier,
+                        );
+                        await controller.syncRecord();
+                        // Invalidate other providers to reflect changes
+                        ref.invalidate(homeControllerProvider);
+                        ref.invalidate(queueControllerProvider);
+                        ref.invalidate(historyControllerProvider);
+                        setState(() {});
+                      },
+                child: Text(
+                  isSyncing ? '...' : 'RETRY',
+                  style: AppTypography.textTheme.labelLarge?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
+          // Show sync error reason if failed
+          if (isFailed &&
+              patient.syncError != null &&
+              patient.syncError!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 14, color: AppColors.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      patient.syncError!,
+                      style: AppTypography.textTheme.bodySmall?.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -171,111 +357,146 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
   Widget _buildOverviewBento(TriageRecord patient) {
     final priorityColor = _getPriorityColor(patient.priority);
 
-    return Column(
+    return Row(
       children: [
-        // Sync banner
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: patient.syncStatus == SyncStatus.synced
-                ? AppColors.primaryContainer
-                : AppColors.errorContainer,
-            border: Border.all(
-              color: patient.syncStatus == SyncStatus.synced
-                  ? AppColors.primary
-                  : AppColors.error,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                patient.syncStatus == SyncStatus.synced
-                    ? Icons.cloud_done
-                    : Icons.wifi_off,
-                color: patient.syncStatus == SyncStatus.synced
-                    ? AppColors.primary
-                    : AppColors.error,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  patient.syncStatus == SyncStatus.synced
-                      ? 'Synced to Cloud'
-                      : 'Local Storage Only - Pending Sync',
-                  style: AppTypography.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: patient.syncStatus == SyncStatus.synced
-                        ? AppColors.primary
-                        : AppColors.error,
-                  ),
-                ),
-              ),
-              if (patient.syncStatus != SyncStatus.synced)
-                TextButton(
-                  onPressed: () async {
-                    final success = await ref
-                        .read(patientControllerProvider.notifier)
-                        .markSynced();
-                    if (success && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Patient marked as synced'),
-                          backgroundColor: AppColors.primary,
-                        ),
-                      );
-                    }
-                  },
-                  child: Text(
-                    'SYNC NOW',
-                    style: AppTypography.textTheme.labelLarge?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-            ],
+        Expanded(
+          child: _DetailCard(
+            title: 'Priority',
+            value: _getPriorityLabel(patient.priority),
+            subtitle: 'Triage Level P${patient.priority}',
+            color: priorityColor,
           ),
         ),
-        const SizedBox(height: 16),
-        // Details cards
-        Row(
-          children: [
-            Expanded(
-              child: _DetailCard(
-                title: 'Priority',
-                value: _getPriorityLabel(patient.priority),
-                subtitle: 'Triage Level ${patient.priority}',
-                color: priorityColor,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _DetailCard(
-                title: 'Age & Gender',
-                value: '${patient.patient.age ?? 'N/A'} yrs',
-                subtitle: patient.patient.gender ?? 'Not specified',
-                color: AppColors.secondary,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _DetailCard(
-                title: 'Status',
-                value: patient.status.toUpperCase(),
-                subtitle: _formatDate(patient.createdAt),
-                color: AppColors.primary,
-                icon: Icons.access_time,
-              ),
-            ),
-          ],
+        const SizedBox(width: 8),
+        Expanded(
+          child: _DetailCard(
+            title: 'Age & Gender',
+            value: '${patient.patient.age ?? 'N/A'} yrs',
+            subtitle: patient.patient.gender ?? 'Not specified',
+            color: AppColors.secondary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _DetailCard(
+            title: 'Status',
+            value: patient.status.toUpperCase(),
+            subtitle: _formatDate(patient.createdAt),
+            color: AppColors.primary,
+            icon: Icons.access_time,
+          ),
         ),
       ],
     );
   }
 
+  Widget _buildLocationSection(TriageRecord patient) {
+    if (patient.location == null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.outlineVariant.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.location_off,
+              color: AppColors.onSurfaceVariant,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'No location data captured',
+                style: AppTypography.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final location = patient.location!;
+    final googleMapsUrl =
+        'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.location_on, color: AppColors.primary, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Location Captured',
+                style: AppTypography.textTheme.titleMedium?.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Latitude: ${location.latitude.toStringAsFixed(6)}',
+                      style: AppTypography.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Longitude: ${location.longitude.toStringAsFixed(6)}',
+                      style: AppTypography.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    if (location.address != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        location.address!,
+                        style: AppTypography.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.open_in_new, color: AppColors.primary),
+                onPressed: () {
+                  // Open in Google Maps
+                  // You can use url_launcher package here
+                  // launchUrl(Uri.parse(googleMapsUrl));
+                },
+                tooltip: 'Open in Google Maps',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTimeline(TriageRecord patient) {
-    // Create timeline events from patient data
     final events = [
       TimelineEvent(
         title: 'Patient Created',
@@ -300,18 +521,29 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
           dotColor: AppColors.tertiary,
           cardColor: AppColors.surfaceContainerLow,
         ),
+      if (patient.location != null)
+        TimelineEvent(
+          title: 'Location Captured',
+          description:
+              'GPS coordinates recorded at ${patient.location!.latitude.toStringAsFixed(4)}, ${patient.location!.longitude.toStringAsFixed(4)}',
+          time: _formatTime(patient.createdAt),
+          dotColor: AppColors.primary,
+          cardColor: AppColors.surfaceContainerLow,
+        ),
       TimelineEvent(
         title: 'Sync Status',
-        description: patient.syncStatus == SyncStatus.synced
-            ? 'Patient record synced to cloud'
-            : 'Patient record pending sync',
+        description: _getSyncDescription(patient),
         time: _formatTime(patient.createdAt),
         dotColor: patient.syncStatus == SyncStatus.synced
             ? AppColors.primary
-            : AppColors.error,
+            : patient.syncStatus == SyncStatus.failed
+            ? AppColors.error
+            : AppColors.onSurfaceVariant,
         cardColor: patient.syncStatus == SyncStatus.synced
             ? AppColors.primaryContainer.withOpacity(0.1)
-            : AppColors.errorContainer.withOpacity(0.1),
+            : patient.syncStatus == SyncStatus.failed
+            ? AppColors.errorContainer.withOpacity(0.1)
+            : AppColors.surfaceContainerLow.withOpacity(0.1),
       ),
     ];
 
@@ -411,6 +643,23 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     );
   }
 
+  String _getSyncDescription(TriageRecord patient) {
+    switch (patient.syncStatus) {
+      case SyncStatus.synced:
+        return 'Patient record synced to cloud';
+      case SyncStatus.syncing:
+        return 'Sync in progress...';
+      case SyncStatus.failed:
+        final error = patient.syncError;
+        if (error != null && error.isNotEmpty) {
+          return 'Sync failed: $error';
+        }
+        return 'Patient record failed to sync';
+      case SyncStatus.pending:
+        return 'Patient record pending sync';
+    }
+  }
+
   Widget _buildClinicalNotes(TriageRecord patient) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,11 +705,14 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                  Text(
-                    patient.chiefComplaint,
-                    style: AppTypography.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.onSurface,
-                      fontWeight: FontWeight.w500,
+                  Expanded(
+                    child: Text(
+                      patient.chiefComplaint,
+                      style: AppTypography.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.onSurface,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.right,
                     ),
                   ),
                 ],
@@ -472,11 +724,15 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     );
   }
 
-  Widget _buildStickyFooter(TriageRecord patient) {
+  Widget _buildStickyFooter(TriageRecord patient, PatientState patientState) {
+    final isSynced = patient.syncStatus == SyncStatus.synced;
+    final isFailed = patient.syncStatus == SyncStatus.failed;
+    final isSyncing = patient.syncStatus == SyncStatus.syncing;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: AppColors.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -489,117 +745,190 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
         top: false,
         child: Row(
           children: [
+            // Edit button - with improved styling
             Expanded(
               child: SizedBox(
-                height: 48,
+                height: 50,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Implement edit functionality
-                  },
+                  onPressed: patientState.isDeleting || patientState.loading
+                      ? null
+                      : () => _showEditDialog(patient),
                   icon: const Icon(Icons.edit, size: 20),
-                  label: const Text('Edit'),
+                  label: const Text(''),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9999),
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
                     side: const BorderSide(color: AppColors.outline),
+                    foregroundColor: AppColors.onSurface,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
+
+            // Sync button - with improved styling and feedback
             Expanded(
               flex: 2,
               child: SizedBox(
-                height: 48,
+                height: 50,
                 child: FilledButton.icon(
-                  onPressed: patient.syncStatus == SyncStatus.synced
+                  onPressed: (isSynced || patientState.loading || isSyncing)
                       ? null
                       : () async {
-                          final success = await ref
-                              .read(patientControllerProvider.notifier)
-                              .markSynced();
-                          if (success && mounted) {
+                          final controller = ref.read(
+                            patientControllerProvider.notifier,
+                          );
+                          final success = await controller.syncRecord();
+
+                          // Invalidate providers to refresh
+                          ref.invalidate(homeControllerProvider);
+                          ref.invalidate(queueControllerProvider);
+                          ref.invalidate(historyControllerProvider);
+
+                          if (mounted) {
+                            final updatedPatient = ref
+                                .read(patientControllerProvider)
+                                .patient;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Patient synced successfully'),
-                                backgroundColor: AppColors.primary,
+                              SnackBar(
+                                content: Text(
+                                  success
+                                      ? 'Patient synced successfully'
+                                      : 'Sync failed: ${updatedPatient?.syncError ?? "Unknown error"}',
+                                ),
+                                backgroundColor: success
+                                    ? AppColors.primary
+                                    : AppColors.error,
+                                duration: const Duration(seconds: 3),
                               ),
                             );
                             setState(() {});
                           }
                         },
-                  icon: const Icon(Icons.sync, size: 20),
+                  icon: patientState.loading || isSyncing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          isFailed ? Icons.replay : Icons.cloud_sync,
+                          size: 20,
+                        ),
                   label: Text(
-                    patient.syncStatus == SyncStatus.synced
-                        ? 'Synced'
-                        : 'Retry Sync',
+                    patientState.loading || isSyncing
+                        ? 'Syncing...'
+                        : isSynced
+                        ? 'Synced ✓'
+                        : isFailed
+                        ? 'Retry'
+                        : 'Sync',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: patient.syncStatus == SyncStatus.synced
+                    backgroundColor: isSynced
                         ? AppColors.primaryContainer
+                        : isFailed
+                        ? AppColors.error
                         : AppColors.primary,
-                    foregroundColor: patient.syncStatus == SyncStatus.synced
+                    foregroundColor: isSynced
                         ? AppColors.primary
                         : AppColors.onPrimary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9999),
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
+                    elevation: isSynced ? 0 : 2,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
+
+            // Delete button - with improved styling
             Expanded(
               child: SizedBox(
-                height: 48,
+                height: 50,
                 child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final shouldDelete = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Delete Patient'),
-                        content: const Text(
-                          'Are you sure you want to delete this patient record? This action cannot be undone.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.error,
+                  onPressed: patientState.isDeleting || patientState.loading
+                      ? null
+                      : () async {
+                          final shouldDelete = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Patient'),
+                              content: const Text(
+                                'Are you sure you want to delete this patient record? This action cannot be undone.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: AppColors.error,
+                                  ),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
                             ),
-                            child: const Text('Delete'),
-                          ),
-                        ],
-                      ),
-                    );
+                          );
 
-                    if (shouldDelete == true) {
-                      final success = await ref
-                          .read(patientControllerProvider.notifier)
-                          .delete();
-                      if (success && mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Patient deleted successfully'),
-                            backgroundColor: AppColors.primary,
+                          if (shouldDelete == true && mounted) {
+                            final success = await ref
+                                .read(patientControllerProvider.notifier)
+                                .delete();
+
+                            // Invalidate providers to refresh
+                            ref.invalidate(homeControllerProvider);
+                            ref.invalidate(queueControllerProvider);
+                            ref.invalidate(historyControllerProvider);
+
+                            if (mounted) {
+                              if (success) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Patient deleted successfully',
+                                    ),
+                                    backgroundColor: AppColors.primary,
+                                  ),
+                                );
+                                // Navigate back to queue
+                                context.go('/queue');
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Failed to delete patient'),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                );
+                              }
+                            }
+                          }
+                        },
+                  icon: patientState.isDeleting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.error,
                           ),
-                        );
-                        context.pop();
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.delete, size: 20),
-                  label: const Text('Delete'),
+                        )
+                      : const Icon(Icons.delete, size: 20),
+                  label: const Text(''),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,
                     side: const BorderSide(color: AppColors.error),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9999),
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
                   ),
                 ),
@@ -607,6 +936,107 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showEditDialog(TriageRecord patient) {
+    final nameController = TextEditingController(text: patient.patient.name);
+    final complaintController = TextEditingController(
+      text: patient.chiefComplaint,
+    );
+    final notesController = TextEditingController(
+      text: patient.clinicalNotes ?? '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Patient'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Patient Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: complaintController,
+                decoration: const InputDecoration(
+                  labelText: 'Chief Complaint',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: notesController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Clinical Notes',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Patient name is required'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+                return;
+              }
+
+              final updated = patient.copyWith(
+                patient: patient_model.Patient(
+                  name: nameController.text.trim(),
+                  age: patient.patient.age,
+                  gender: patient.patient.gender,
+                ),
+                chiefComplaint: complaintController.text.trim(),
+                clinicalNotes: notesController.text.trim().isEmpty
+                    ? null
+                    : notesController.text.trim(),
+              );
+
+              final controller = ref.read(patientControllerProvider.notifier);
+              final success = await controller.update(updated);
+
+              if (success && mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Patient record updated'),
+                    backgroundColor: AppColors.primary,
+                  ),
+                );
+
+                // Invalidate to refresh
+                ref.invalidate(homeControllerProvider);
+                ref.invalidate(queueControllerProvider);
+                ref.invalidate(historyControllerProvider);
+
+                // Refresh the current view
+                setState(() {});
+              }
+            },
+            child: const Text('Save Changes'),
+          ),
+        ],
       ),
     );
   }
@@ -734,7 +1164,7 @@ class _DetailCard extends StatelessWidget {
                 ),
               ],
             ),
-          ] else
+          ] else ...[
             Text(
               value,
               style: AppTypography.textTheme.titleMedium?.copyWith(
@@ -742,6 +1172,7 @@ class _DetailCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ],
           const SizedBox(height: 4),
           Text(
             subtitle,

@@ -7,6 +7,9 @@ import '../models/location.dart';
 import '../models/patient.dart';
 import '../models/triage_record.dart';
 import '../repositories/triage_repository.dart';
+import 'history_controller.dart';
+import 'home_controller.dart';
+import 'queue_controller.dart';
 
 class IntakeState {
   const IntakeState({
@@ -47,7 +50,6 @@ class IntakeState {
 class IntakeController extends Notifier<IntakeState> {
   @override
   IntakeState build() {
-    // Get location when controller initializes
     _getCurrentLocation();
     return const IntakeState();
   }
@@ -59,7 +61,6 @@ class IntakeController extends Notifier<IntakeState> {
     try {
       state = state.copyWith(isLocationLoading: true, locationError: null);
 
-      // Check location service first
       final isServiceEnabled = await _locationService
           .isLocationServiceEnabled();
       if (!isServiceEnabled) {
@@ -70,7 +71,6 @@ class IntakeController extends Notifier<IntakeState> {
         return;
       }
 
-      // Check permission
       final hasPermission = await _locationService.requestPermission();
       if (!hasPermission) {
         state = state.copyWith(
@@ -112,16 +112,13 @@ class IntakeController extends Notifier<IntakeState> {
     try {
       state = state.copyWith(isLoading: true, success: false, error: null);
 
-      // If we don't have location yet, try to get it
       TriageLocation? location = state.currentLocation;
       if (location == null && state.locationError == null) {
         await _getCurrentLocation();
         location = state.currentLocation;
       }
 
-      // If location is still null but no error, it's still loading
       if (location == null && state.isLocationLoading) {
-        // Wait a bit for location to load
         await Future.delayed(const Duration(seconds: 2));
         location = state.currentLocation;
       }
@@ -132,7 +129,7 @@ class IntakeController extends Notifier<IntakeState> {
         clinicalNotes: clinicalNotes,
         priority: priority,
         status: status.isNotEmpty ? status : 'pending',
-        location: location, // Will be null if location couldn't be captured
+        location: location,
         nfcTag: nfcTag,
         createdAt: DateTime.now(),
         syncStatus: SyncStatus.pending,
@@ -141,6 +138,11 @@ class IntakeController extends Notifier<IntakeState> {
       await _repository.save(record);
 
       state = state.copyWith(isLoading: false, success: true, error: null);
+
+      // Invalidate other providers so they refresh automatically
+      ref.invalidate(homeControllerProvider);
+      ref.invalidate(queueControllerProvider);
+      ref.invalidate(historyControllerProvider);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -150,7 +152,6 @@ class IntakeController extends Notifier<IntakeState> {
     }
   }
 
-  // Refresh location
   Future<void> refreshLocation() async {
     await _getCurrentLocation();
   }

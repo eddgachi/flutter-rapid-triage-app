@@ -53,20 +53,32 @@ class SyncService {
     _syncTimer?.cancel();
   }
 
-  // Perform full sync
   Future<SyncResult> _performSync() async {
     try {
       final pendingRecords = _repository.getPending();
-      if (pendingRecords.isEmpty) {
+      // Also retry failed records
+      final failedRecords = _repository.getFailedSync();
+      final allRecords = [...pendingRecords, ...failedRecords];
+
+      // Deduplicate by ID
+      final seen = <String>{};
+      final recordsToSync = <dynamic>[];
+      for (final r in allRecords) {
+        if (seen.add(r.id)) {
+          recordsToSync.add(r);
+        }
+      }
+
+      if (recordsToSync.isEmpty) {
         return SyncResult(success: true, synced: 0, failed: 0);
       }
 
       int synced = 0;
       int failed = 0;
+      String? lastError;
 
-      for (final record in pendingRecords) {
+      for (final record in recordsToSync) {
         try {
-          // Update status to syncing
           await _repository.updateSyncStatus(record.id, SyncStatus.syncing);
 
           // Send to API
@@ -75,17 +87,18 @@ class SyncService {
             data: record.toJson(),
           );
 
-          // Mark as synced
-          await _repository.updateSyncStatus(record.id, SyncStatus.synced);
+          // Mark as synced, clear any error
+          await _repository.updateSyncStatusWithError(record.id, SyncStatus.synced, null);
           synced++;
         } catch (e) {
-          // Mark as failed
-          await _repository.updateSyncStatus(record.id, SyncStatus.failed);
+          final errorMsg = _extractErrorReason(e);
+          lastError = errorMsg;
+          await _repository.updateSyncStatusWithError(record.id, SyncStatus.failed, errorMsg);
           failed++;
         }
       }
 
-      return SyncResult(success: failed == 0, synced: synced, failed: failed);
+      return SyncResult(success: failed == 0, synced: synced, failed: failed, error: lastError);
     } catch (e) {
       return SyncResult(
         success: false,
@@ -96,7 +109,32 @@ class SyncService {
     }
   }
 
-  // Manual sync trigger
+  String _extractErrorReason(Object error) {
+    final msg = error.toString();
+    if (msg.contains('SocketException') || msg.contains('Connection refused') || msg.contains('No address associated')) {
+      return 'Connection error: Unable to reach server';
+    }
+    if (msg.contains('TimeoutException') || msg.contains('timed out')) {
+      return 'Request timed out';
+    }
+    if (msg.contains('400')) {
+      return 'Bad request: Invalid record data';
+    }
+    if (msg.contains('401') || msg.contains('403')) {
+      return 'Authentication error: Unauthorized';
+    }
+    if (msg.contains('404')) {
+      return 'Server endpoint not found';
+    }
+    if (msg.contains('500') || msg.contains('502') || msg.contains('503')) {
+      return 'Server error: Service unavailable';
+    }
+    if (msg.length > 80) {
+      return msg.substring(0, 80);
+    }
+    return msg;
+  }
+
   Future<SyncResult> syncNow() async {
     final connected = await _connectivityService.isConnected();
     if (!connected) {
@@ -110,31 +148,33 @@ class SyncService {
     return _performSync();
   }
 
-  // Sync a single record
   Future<bool> syncRecord(String id) async {
     final connected = await _connectivityService.isConnected();
-    if (!connected) return false;
+    if (!connected) {
+      await _repository.updateSyncStatusWithError(id, SyncStatus.failed, 'No internet connection');
+      return false;
+    }
 
     try {
       final record = _repository.getById(id);
       if (record == null) return false;
 
-      await _repository.updateSyncStatus(id, SyncStatus.syncing);
+      await _repository.updateSyncStatusWithError(id, SyncStatus.syncing, null);
 
       await _apiService.client.put(
         '/triage/records/$id',
         data: record.toJson(),
       );
 
-      await _repository.updateSyncStatus(id, SyncStatus.synced);
+      await _repository.updateSyncStatusWithError(id, SyncStatus.synced, null);
       return true;
     } catch (e) {
-      await _repository.updateSyncStatus(id, SyncStatus.failed);
+      final errorMsg = _extractErrorReason(e);
+      await _repository.updateSyncStatusWithError(id, SyncStatus.failed, errorMsg);
       return false;
     }
   }
 
-  // Get sync status
   SyncStatus getSyncStatus(String id) {
     final record = _repository.getById(id);
     return record?.syncStatus ?? SyncStatus.pending;

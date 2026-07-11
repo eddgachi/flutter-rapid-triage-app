@@ -220,6 +220,19 @@ class TriageRepository {
     }
   }
 
+  // Update sync status with error reason
+  Future<void> updateSyncStatusWithError(
+    String id,
+    SyncStatus newStatus,
+    String? error,
+  ) async {
+    final record = getById(id);
+    if (record != null) {
+      final updated = record.copyWith(syncStatus: newStatus, syncError: error);
+      await update(updated);
+    }
+  }
+
   // Get records with sync status
   List<TriageRecord> getBySyncStatus(SyncStatus status) {
     final all = getAll();
