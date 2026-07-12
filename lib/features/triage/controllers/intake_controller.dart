@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/app_providers.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/services/connectivity_service.dart';
 import '../../../core/services/location_service.dart';
 import '../models/location.dart';
 import '../models/patient.dart';
@@ -48,6 +49,12 @@ class IntakeState {
 }
 
 class IntakeController extends Notifier<IntakeState> {
+  /// Fallback location used when the device is offline or GPS is unavailable.
+  static const TriageLocation _fallbackLocation = TriageLocation(
+    latitude: 0.0,
+    longitude: 0.0,
+  );
+
   @override
   IntakeState build() {
     _getCurrentLocation();
@@ -56,32 +63,56 @@ class IntakeController extends Notifier<IntakeState> {
 
   TriageRepository get _repository => ref.read(triageRepositoryProvider);
   LocationService get _locationService => ref.read(locationServiceProvider);
+  ConnectivityService get _connectivityService =>
+      ref.read(connectivityServiceProvider);
 
-  Future<void> _getCurrentLocation() async {
+  /// Attempts to fetch the current GPS location.
+  ///
+  /// If the device is offline, GPS is disabled, permission is denied,
+  /// or the request times out — returns [0.0, 0.0] immediately.
+  Future<TriageLocation> _getCurrentLocation() async {
     try {
       state = state.copyWith(isLocationLoading: true, locationError: null);
 
+      // 1. If offline, skip GPS entirely and use fallback
+      final isConnected = await _connectivityService.isConnected();
+      if (!isConnected) {
+        state = state.copyWith(
+          currentLocation: _fallbackLocation,
+          isLocationLoading: false,
+          locationError: null,
+        );
+        return _fallbackLocation;
+      }
+
+      // 2. Check if location services are enabled
       final isServiceEnabled = await _locationService
           .isLocationServiceEnabled();
       if (!isServiceEnabled) {
         state = state.copyWith(
+          currentLocation: _fallbackLocation,
           isLocationLoading: false,
-          locationError: 'Location services are disabled. Please enable GPS.',
+          locationError: null,
         );
-        return;
+        return _fallbackLocation;
       }
 
+      // 3. Check / request permission
       final hasPermission = await _locationService.requestPermission();
       if (!hasPermission) {
         state = state.copyWith(
+          currentLocation: _fallbackLocation,
           isLocationLoading: false,
-          locationError:
-              'Location permission denied. Please enable in settings.',
+          locationError: null,
         );
-        return;
+        return _fallbackLocation;
       }
 
-      final position = await _locationService.getCurrentLocation();
+      // 4. Fetch location with a 5-second timeout to avoid hanging
+      final position = await _locationService.getCurrentLocation().timeout(
+        const Duration(seconds: 5),
+      );
+
       final location = TriageLocation(
         latitude: position.latitude,
         longitude: position.longitude,
@@ -91,11 +122,15 @@ class IntakeController extends Notifier<IntakeState> {
         currentLocation: location,
         isLocationLoading: false,
       );
-    } catch (e) {
+      return location;
+    } catch (_) {
+      // Any failure (timeout, no GPS fix, error) → use fallback silently
       state = state.copyWith(
+        currentLocation: _fallbackLocation,
         isLocationLoading: false,
-        locationError: 'Failed to get location: $e',
+        locationError: null,
       );
+      return _fallbackLocation;
     }
   }
 
@@ -112,16 +147,8 @@ class IntakeController extends Notifier<IntakeState> {
     try {
       state = state.copyWith(isLoading: true, success: false, error: null);
 
-      TriageLocation? location = state.currentLocation;
-      if (location == null && state.locationError == null) {
-        await _getCurrentLocation();
-        location = state.currentLocation;
-      }
-
-      if (location == null && state.isLocationLoading) {
-        await Future.delayed(const Duration(seconds: 2));
-        location = state.currentLocation;
-      }
+      // Gets location immediately — uses fallback (0.0, 0.0) if offline/unavailable
+      final location = await _getCurrentLocation();
 
       final record = TriageRecord(
         patient: Patient(name: patientName, age: age, gender: gender),
