@@ -106,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen> {
                             'RapidTriage',
                             style: AppTypography.textTheme.headlineLarge
                                 ?.copyWith(
-                                  color: AppColors.primary,
+                                  color: Theme.of(context).colorScheme.primary,
                                   fontSize: 32,
                                 ),
                           ),
@@ -115,7 +115,9 @@ class _SplashScreenState extends State<SplashScreen> {
                             'Mission-Critical Field Triage',
                             style: AppTypography.textTheme.titleMedium
                                 ?.copyWith(
-                                  color: AppColors.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   letterSpacing: 2,
                                 ),
                           ),
@@ -199,7 +201,7 @@ class _AnimatedLogo extends StatelessWidget {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -208,10 +210,10 @@ class _AnimatedLogo extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.emergency,
                 size: 48,
-                color: AppColors.primary,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),

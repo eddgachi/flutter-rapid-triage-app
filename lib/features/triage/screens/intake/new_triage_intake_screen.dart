@@ -86,9 +86,11 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                         final s = ref.read(syncControllerProvider);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(s.isConnected
-                                ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
-                                : 'No internet connection'),
+                            content: Text(
+                              s.isConnected
+                                  ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
+                                  : 'No internet connection',
+                            ),
                             backgroundColor: s.isConnected
                                 ? AppColors.primary
                                 : AppColors.error,
@@ -99,7 +101,10 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                     child: const ConnectivityIndicator(),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  Icon(Icons.account_circle, color: AppColors.onSurfaceVariant),
+                  Icon(
+                    Icons.account_circle,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ],
               ),
             ),
@@ -168,9 +173,9 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
       );
     }
 
-    return const Icon(
+    return Icon(
       Icons.location_off,
-      color: AppColors.onSurfaceVariant,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
       size: 20,
     );
   }
@@ -182,14 +187,14 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
         Text(
           'New Triage Intake',
           style: AppTypography.textTheme.headlineMedium?.copyWith(
-            color: AppColors.onSurface,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Initialize patient record for rapid response.',
           style: AppTypography.textTheme.bodyMedium?.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -200,9 +205,11 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.outlineVariant.withOpacity(0.3)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,7 +221,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
               Text(
                 'Patient Info',
                 style: AppTypography.textTheme.titleMedium?.copyWith(
-                  color: AppColors.onSurface,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -227,7 +234,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
               Text(
                 'Full Name *',
                 style: AppTypography.textTheme.labelLarge?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -242,12 +249,16 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                 decoration: InputDecoration(
                   hintText: 'John Doe',
                   filled: true,
-                  fillColor: AppColors.surfaceVariant,
-                  border: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.outline),
+                  fillColor: Theme.of(context).colorScheme.surfaceVariant,
+                  border: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
-                  enabledBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.outline),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderSide: BorderSide(color: AppColors.primary, width: 2),
@@ -267,7 +278,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
               Text(
                 'Estimated Age',
                 style: AppTypography.textTheme.labelLarge?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               Container(
@@ -302,19 +313,19 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
               Text(
                 'Infant',
                 style: AppTypography.textTheme.labelMedium?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               Text(
                 'Adult',
                 style: AppTypography.textTheme.labelMedium?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               Text(
                 'Senior',
                 style: AppTypography.textTheme.labelMedium?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -324,7 +335,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
           Text(
             'Gender',
             style: AppTypography.textTheme.labelLarge?.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -367,9 +378,11 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.outlineVariant.withOpacity(0.3)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -381,7 +394,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
               Text(
                 'Clinical Presentation',
                 style: AppTypography.textTheme.titleMedium?.copyWith(
-                  color: AppColors.onSurface,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -393,7 +406,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
               Text(
                 'Chief Complaint *',
                 style: AppTypography.textTheme.labelLarge?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -408,9 +421,11 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                 decoration: InputDecoration(
                   hintText: 'Shortness of breath, chest pain...',
                   filled: true,
-                  fillColor: AppColors.surfaceVariant,
-                  border: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.outline),
+                  fillColor: Theme.of(context).colorScheme.surfaceVariant,
+                  border: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderSide: BorderSide(color: AppColors.primary, width: 2),
@@ -429,7 +444,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
               Text(
                 'Clinical Notes / Symptoms',
                 style: AppTypography.textTheme.labelLarge?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -439,9 +454,11 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                 decoration: InputDecoration(
                   hintText: 'Observed trauma, vital signs, pupil response...',
                   filled: true,
-                  fillColor: AppColors.surfaceVariant,
-                  border: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.outline),
+                  fillColor: Theme.of(context).colorScheme.surfaceVariant,
+                  border: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderSide: BorderSide(color: AppColors.primary, width: 2),
@@ -473,7 +490,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                 Text(
                   'Triage Priority *',
                   style: AppTypography.textTheme.titleMedium?.copyWith(
-                    color: AppColors.onSurface,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -481,7 +498,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
             Text(
               'REQUIRED',
               style: AppTypography.textTheme.labelMedium?.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 letterSpacing: 1,
               ),
             ),
@@ -513,7 +530,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
           title: 'Minimal',
           subtitle: 'Minor injuries / Walking wounded',
           color: AppColors.p3Delayed,
-          textColor: AppColors.onSurface,
+          textColor: Theme.of(context).colorScheme.onSurface,
           showIcon: false,
           priority: 3,
         ),
@@ -533,7 +550,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
           title: 'Minor',
           subtitle: 'Discharge or non-urgent',
           color: AppColors.primary,
-          textColor: AppColors.onPrimary,
+          textColor: Theme.of(context).colorScheme.onPrimary,
           showIcon: false,
           priority: 5,
         ),
@@ -559,9 +576,11 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primaryFixed.withOpacity(0.2)
-              : AppColors.surface,
+              : Theme.of(context).colorScheme.surface,
           border: Border.all(
-            color: isSelected ? color : AppColors.outlineVariant,
+            color: isSelected
+                ? color
+                : Theme.of(context).colorScheme.outlineVariant,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -609,7 +628,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                   Text(
                     subtitle,
                     style: AppTypography.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -627,9 +646,11 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.outlineVariant.withOpacity(0.3)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -641,7 +662,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
               Text(
                 'Location',
                 style: AppTypography.textTheme.titleMedium?.copyWith(
-                  color: AppColors.onSurface,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -664,7 +685,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                 Text(
                   'Getting location...',
                   style: AppTypography.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -697,7 +718,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                   child: Text(
                     'Location captured: ${state.currentLocation!.latitude.toStringAsFixed(4)}, ${state.currentLocation!.longitude.toStringAsFixed(4)}',
                     style: AppTypography.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -706,16 +727,16 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
           else
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.location_off,
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   size: 20,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Location not available',
                   style: AppTypography.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -724,7 +745,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
           Text(
             'Location will be automatically captured when you save the record.',
             style: AppTypography.textTheme.bodySmall?.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -736,7 +757,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -804,7 +825,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
             ),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.onPrimary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.full),
               ),
@@ -838,12 +859,12 @@ class _GenderButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.secondaryContainer.withOpacity(0.3)
-              : AppColors.surfaceVariant.withOpacity(0.5),
+              : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(
             color: isSelected
                 ? AppColors.secondaryContainer
-                : AppColors.outlineVariant,
+                : Theme.of(context).colorScheme.outlineVariant,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -854,7 +875,7 @@ class _GenderButton extends StatelessWidget {
               icon,
               color: isSelected
                   ? AppColors.onSecondaryContainer
-                  : AppColors.onSurfaceVariant,
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
               size: 28,
             ),
             const SizedBox(height: 4),
@@ -863,7 +884,7 @@ class _GenderButton extends StatelessWidget {
               style: AppTypography.textTheme.labelLarge?.copyWith(
                 color: isSelected
                     ? AppColors.onSecondaryContainer
-                    : AppColors.onSurfaceVariant,
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),

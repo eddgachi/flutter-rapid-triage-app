@@ -13,7 +13,7 @@ class BottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
         boxShadow: [
           BoxShadow(
@@ -92,7 +92,7 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.secondaryContainer : Colors.transparent,
+          color: isActive ? Theme.of(context).colorScheme.secondaryContainer : Colors.transparent,
           borderRadius: BorderRadius.circular(9999),
         ),
         child: Column(
@@ -101,8 +101,8 @@ class _NavItem extends StatelessWidget {
             Icon(
               isActive ? activeIcon : icon,
               color: isActive
-                  ? AppColors.onSecondaryContainer
-                  : AppColors.onSurfaceVariant,
+                  ? Theme.of(context).colorScheme.onSecondaryContainer
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
               size: 24,
             ),
             const SizedBox(height: 2),
@@ -114,8 +114,8 @@ class _NavItem extends StatelessWidget {
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.5,
                 color: isActive
-                    ? AppColors.onSecondaryContainer
-                    : AppColors.onSurfaceVariant,
+                    ? Theme.of(context).colorScheme.onSecondaryContainer
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],

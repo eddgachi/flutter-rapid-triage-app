@@ -46,7 +46,9 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
       return Scaffold(
         body: SafeArea(
           child: Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
+            child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
         ),
       );
@@ -59,19 +61,23 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.person_off, size: 64, color: AppColors.outline),
+                Icon(
+                  Icons.person_off,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Patient not found',
                   style: AppTypography.textTheme.headlineSmall?.copyWith(
-                    color: AppColors.onSurface,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'The patient record could not be loaded.',
                   style: AppTypography.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -97,7 +103,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
         child: Column(
           children: [
             _buildAppBar(context, patient, syncState),
-            if (!syncState.isConnected) _buildOfflineBar(),
+            if (!syncState.isConnected) _buildOfflineBar(context),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(
@@ -129,20 +135,24 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     );
   }
 
-  Widget _buildOfflineBar() {
+  Widget _buildOfflineBar(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: AppColors.errorContainer,
+      color: Theme.of(context).colorScheme.errorContainer,
       child: Row(
         children: [
-          Icon(Icons.wifi_off, color: AppColors.error, size: 16),
+          Icon(
+            Icons.wifi_off,
+            color: Theme.of(context).colorScheme.error,
+            size: 16,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Offline Mode - Changes will sync when connected',
               style: AppTypography.textTheme.bodySmall?.copyWith(
-                color: AppColors.error,
+                color: Theme.of(context).colorScheme.error,
               ),
             ),
           ),
@@ -161,8 +171,8 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       height: 64,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Color(0x08000000),
@@ -175,7 +185,10 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
         children: [
           // Fixed back button - using context.pop() from go_router
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+            icon: Icon(
+              Icons.arrow_back,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             onPressed: () {
               // Invalidate providers to refresh data when returning
               ref.invalidate(homeControllerProvider);
@@ -193,7 +206,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                 Text(
                   patient.patient.name,
                   style: AppTypography.textTheme.titleLarge?.copyWith(
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -201,7 +214,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                 Text(
                   'ID: ${patient.id.length > 8 ? patient.id.substring(0, 8) : patient.id}',
                   style: AppTypography.textTheme.labelMedium?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -225,20 +238,24 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.primaryContainer,
-          border: Border.all(color: AppColors.primary),
+          color: Theme.of(context).colorScheme.primaryContainer,
+          border: Border.all(color: Theme.of(context).colorScheme.primary),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
-            Icon(Icons.cloud_done, color: AppColors.primary, size: 24),
+            Icon(
+              Icons.cloud_done,
+              color: Theme.of(context).colorScheme.primary,
+              size: 24,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Synced to Cloud',
                 style: AppTypography.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ),
@@ -255,14 +272,14 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isFailed
-            ? AppColors.errorContainer
-            : AppColors.surfaceContainerLow,
+            ? Theme.of(context).colorScheme.errorContainer
+            : Theme.of(context).colorScheme.surfaceContainerLow,
         border: Border.all(
           color: isFailed
-              ? AppColors.error
+              ? Theme.of(context).colorScheme.error
               : isSyncing
-              ? AppColors.primary
-              : AppColors.outlineVariant,
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outlineVariant,
         ),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -278,10 +295,10 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                     ? Icons.sync
                     : Icons.cloud_off,
                 color: isFailed
-                    ? AppColors.error
+                    ? Theme.of(context).colorScheme.error
                     : isSyncing
-                    ? AppColors.primary
-                    : AppColors.error,
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.error,
                 size: 24,
               ),
               const SizedBox(width: 12),
@@ -294,7 +311,9 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                       : 'Local Storage Only',
                   style: AppTypography.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: isFailed ? AppColors.error : AppColors.onSurface,
+                    color: isFailed
+                        ? Theme.of(context).colorScheme.error
+                        : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -315,7 +334,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                 child: Text(
                   isSyncing ? '...' : 'RETRY',
                   style: AppTypography.textTheme.labelLarge?.copyWith(
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -330,18 +349,22 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.error.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 14, color: AppColors.error),
+                  Icon(
+                    Icons.info_outline,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       patient.syncError!,
                       style: AppTypography.textTheme.bodySmall?.copyWith(
-                        color: AppColors.error,
+                        color: Theme.of(context).colorScheme.error,
                       ),
                     ),
                   ),
@@ -373,7 +396,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
             title: 'Age & Gender',
             value: '${patient.patient.age ?? 'N/A'} yrs',
             subtitle: patient.patient.gender ?? 'Not specified',
-            color: AppColors.secondary,
+            color: Theme.of(context).colorScheme.secondary,
           ),
         ),
         const SizedBox(width: 8),
@@ -382,7 +405,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
             title: 'Status',
             value: patient.status.toUpperCase(),
             subtitle: _formatDate(patient.createdAt),
-            color: AppColors.primary,
+            color: Theme.of(context).colorScheme.primary,
             icon: Icons.access_time,
           ),
         ),
@@ -395,15 +418,19 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.outlineVariant.withOpacity(0.3)),
+          border: Border.all(
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withOpacity(0.3),
+          ),
         ),
         child: Row(
           children: [
             Icon(
               Icons.location_off,
-              color: AppColors.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               size: 20,
             ),
             const SizedBox(width: 12),
@@ -411,7 +438,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
               child: Text(
                 'No location data captured',
                 style: AppTypography.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -427,21 +454,27 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.location_on, color: AppColors.primary, size: 20),
+              Icon(
+                Icons.location_on,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Location Captured',
                 style: AppTypography.textTheme.titleMedium?.copyWith(
-                  color: AppColors.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ],
@@ -456,14 +489,14 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                     Text(
                       'Latitude: ${location.latitude.toStringAsFixed(6)}',
                       style: AppTypography.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.onSurface,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Longitude: ${location.longitude.toStringAsFixed(6)}',
                       style: AppTypography.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.onSurface,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     if (location.address != null) ...[
@@ -471,7 +504,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                       Text(
                         location.address!,
                         style: AppTypography.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -481,7 +514,10 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.open_in_new, color: AppColors.primary),
+                icon: Icon(
+                  Icons.open_in_new,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 onPressed: () {
                   // Open in Google Maps
                   // You can use url_launcher package here
@@ -502,24 +538,24 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
         title: 'Patient Created',
         description: 'Initial triage record created',
         time: _formatTime(patient.createdAt),
-        dotColor: AppColors.primary,
-        cardColor: AppColors.surfaceContainerLow,
+        dotColor: Theme.of(context).colorScheme.primary,
+        cardColor: Theme.of(context).colorScheme.surfaceContainerLow,
       ),
       if (patient.chiefComplaint.isNotEmpty)
         TimelineEvent(
           title: 'Chief Complaint Recorded',
           description: patient.chiefComplaint,
           time: _formatTime(patient.createdAt),
-          dotColor: AppColors.secondary,
-          cardColor: AppColors.surfaceContainerLow,
+          dotColor: Theme.of(context).colorScheme.secondary,
+          cardColor: Theme.of(context).colorScheme.surfaceContainerLow,
         ),
       if (patient.clinicalNotes != null && patient.clinicalNotes!.isNotEmpty)
         TimelineEvent(
           title: 'Clinical Notes Added',
           description: patient.clinicalNotes!,
           time: _formatTime(patient.createdAt),
-          dotColor: AppColors.tertiary,
-          cardColor: AppColors.surfaceContainerLow,
+          dotColor: Theme.of(context).colorScheme.tertiary,
+          cardColor: Theme.of(context).colorScheme.surfaceContainerLow,
         ),
       if (patient.location != null)
         TimelineEvent(
@@ -527,23 +563,25 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
           description:
               'GPS coordinates recorded at ${patient.location!.latitude.toStringAsFixed(4)}, ${patient.location!.longitude.toStringAsFixed(4)}',
           time: _formatTime(patient.createdAt),
-          dotColor: AppColors.primary,
-          cardColor: AppColors.surfaceContainerLow,
+          dotColor: Theme.of(context).colorScheme.primary,
+          cardColor: Theme.of(context).colorScheme.surfaceContainerLow,
         ),
       TimelineEvent(
         title: 'Sync Status',
         description: _getSyncDescription(patient),
         time: _formatTime(patient.createdAt),
         dotColor: patient.syncStatus == SyncStatus.synced
-            ? AppColors.primary
+            ? Theme.of(context).colorScheme.primary
             : patient.syncStatus == SyncStatus.failed
-            ? AppColors.error
-            : AppColors.onSurfaceVariant,
+            ? Theme.of(context).colorScheme.error
+            : Theme.of(context).colorScheme.onSurfaceVariant,
         cardColor: patient.syncStatus == SyncStatus.synced
-            ? AppColors.primaryContainer.withOpacity(0.1)
+            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1)
             : patient.syncStatus == SyncStatus.failed
-            ? AppColors.errorContainer.withOpacity(0.1)
-            : AppColors.surfaceContainerLow.withOpacity(0.1),
+            ? Theme.of(context).colorScheme.errorContainer.withOpacity(0.1)
+            : Theme.of(
+                context,
+              ).colorScheme.surfaceContainerLow.withOpacity(0.1),
       ),
     ];
 
@@ -552,12 +590,16 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
       children: [
         Row(
           children: [
-            const Icon(Icons.history, color: AppColors.onSurface, size: 20),
+            Icon(
+              Icons.history,
+              color: Theme.of(context).colorScheme.onSurface,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Text(
               'Triage Timeline',
               style: AppTypography.textTheme.titleLarge?.copyWith(
-                color: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -579,7 +621,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                           shape: BoxShape.circle,
                           color: e.dotColor,
                           border: Border.all(
-                            color: AppColors.background,
+                            color: Theme.of(context).colorScheme.surface,
                             width: 4,
                           ),
                         ),
@@ -587,7 +629,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                       Expanded(
                         child: Container(
                           width: 2,
-                          color: AppColors.outlineVariant,
+                          color: Theme.of(context).colorScheme.outlineVariant,
                         ),
                       ),
                     ],
@@ -618,7 +660,9 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                                 e.time,
                                 style: AppTypography.textTheme.labelMedium
                                     ?.copyWith(
-                                      color: AppColors.onSurfaceVariant,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                               ),
                             ],
@@ -627,7 +671,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                           Text(
                             e.description,
                             style: AppTypography.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.onSurface,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                         ],
@@ -666,12 +710,16 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
       children: [
         Row(
           children: [
-            const Icon(Icons.notes, color: AppColors.onSurface, size: 20),
+            Icon(
+              Icons.notes,
+              color: Theme.of(context).colorScheme.onSurface,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Text(
               'Clinical Notes',
               style: AppTypography.textTheme.titleLarge?.copyWith(
-                color: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -680,8 +728,10 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            border: Border.all(color: AppColors.outlineVariant),
+            color: Theme.of(context).colorScheme.surface,
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -690,11 +740,14 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
               Text(
                 patient.clinicalNotes ?? 'No clinical notes recorded.',
                 style: AppTypography.textTheme.bodyLarge?.copyWith(
-                  color: AppColors.onSurface,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
-              const Divider(height: 1, color: AppColors.outlineVariant),
+              Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -702,14 +755,14 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                   Text(
                     'Chief Complaint',
                     style: AppTypography.textTheme.labelMedium?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   Expanded(
                     child: Text(
                       patient.chiefComplaint,
                       style: AppTypography.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.onSurface,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w500,
                       ),
                       textAlign: TextAlign.right,
@@ -732,7 +785,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -759,8 +812,10 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
-                    side: const BorderSide(color: AppColors.outline),
-                    foregroundColor: AppColors.onSurface,
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    foregroundColor: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -798,8 +853,8 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                                       : 'Sync failed: ${updatedPatient?.syncError ?? "Unknown error"}',
                                 ),
                                 backgroundColor: success
-                                    ? AppColors.primary
-                                    : AppColors.error,
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.error,
                                 duration: const Duration(seconds: 3),
                               ),
                             );
@@ -831,13 +886,13 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: isSynced
-                        ? AppColors.primaryContainer
+                        ? Theme.of(context).colorScheme.primaryContainer
                         : isFailed
-                        ? AppColors.error
-                        : AppColors.primary,
+                        ? Theme.of(context).colorScheme.error
+                        : Theme.of(context).colorScheme.primary,
                     foregroundColor: isSynced
-                        ? AppColors.primary
-                        : AppColors.onPrimary,
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
@@ -872,7 +927,9 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, true),
                                   style: TextButton.styleFrom(
-                                    foregroundColor: AppColors.error,
+                                    foregroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.error,
                                   ),
                                   child: const Text('Delete'),
                                 ),
@@ -893,20 +950,24 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                             if (mounted) {
                               if (success) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                     content: Text(
                                       'Patient deleted successfully',
                                     ),
-                                    backgroundColor: AppColors.primary,
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                 );
                                 // Navigate back to queue
                                 context.go('/queue');
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                     content: Text('Failed to delete patient'),
-                                    backgroundColor: AppColors.error,
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.error,
                                   ),
                                 );
                               }
@@ -914,19 +975,21 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                           }
                         },
                   icon: patientState.isDeleting
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: AppColors.error,
+                            color: Theme.of(context).colorScheme.error,
                           ),
                         )
                       : const Icon(Icons.delete, size: 20),
                   label: const Text(''),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                    side: const BorderSide(color: AppColors.error),
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
@@ -993,9 +1056,9 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
             onPressed: () async {
               if (nameController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content: Text('Patient name is required'),
-                    backgroundColor: AppColors.error,
+                    backgroundColor: Theme.of(context).colorScheme.error,
                   ),
                 );
                 return;
@@ -1019,9 +1082,9 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
               if (success && mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content: Text('Patient record updated'),
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
                 );
 
@@ -1045,15 +1108,15 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
   Color _getPriorityColor(int priority) {
     switch (priority) {
       case 1:
-        return AppColors.error;
+        return Theme.of(context).colorScheme.error;
       case 2:
         return AppColors.p2Urgent;
       case 3:
         return AppColors.p3Delayed;
       case 4:
-        return AppColors.inverseSurface;
+        return Theme.of(context).colorScheme.inverseSurface;
       default:
-        return AppColors.primary;
+        return Theme.of(context).colorScheme.primary;
     }
   }
 
@@ -1130,7 +1193,7 @@ class _DetailCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         border: Border(left: BorderSide(color: color, width: 4)),
         borderRadius: BorderRadius.circular(AppRadius.md),
         boxShadow: [
@@ -1143,7 +1206,7 @@ class _DetailCard extends StatelessWidget {
           Text(
             title,
             style: AppTypography.textTheme.labelMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               letterSpacing: 1,
             ),
           ),
@@ -1157,7 +1220,7 @@ class _DetailCard extends StatelessWidget {
                   child: Text(
                     value,
                     style: AppTypography.textTheme.titleMedium?.copyWith(
-                      color: AppColors.onSurface,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1168,7 +1231,7 @@ class _DetailCard extends StatelessWidget {
             Text(
               value,
               style: AppTypography.textTheme.titleMedium?.copyWith(
-                color: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1177,7 +1240,7 @@ class _DetailCard extends StatelessWidget {
           Text(
             subtitle,
             style: AppTypography.textTheme.bodyMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],

@@ -45,9 +45,10 @@ class SyncHistoryScreen extends ConsumerWidget {
                       synced: synced,
                       failed: failed,
                       pending: pending,
+                      context: context,
                     ),
                     const SizedBox(height: 24),
-                    _buildActionBar(ref),
+                    _buildActionBar(ref, context),
                     const SizedBox(height: 16),
                     if (historyState.loading)
                       const Center(
@@ -65,20 +66,26 @@ class SyncHistoryScreen extends ConsumerWidget {
                               Icon(
                                 Icons.history,
                                 size: 64,
-                                color: AppColors.outline,
+                                color: Theme.of(context).colorScheme.outline,
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 'No sync history',
                                 style: AppTypography.textTheme.headlineSmall
-                                    ?.copyWith(color: AppColors.onSurface),
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                    ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 'Patient records will appear here once they are created.',
                                 style: AppTypography.textTheme.bodyMedium
                                     ?.copyWith(
-                                      color: AppColors.onSurfaceVariant,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                 textAlign: TextAlign.center,
                               ),
@@ -94,7 +101,7 @@ class SyncHistoryScreen extends ConsumerWidget {
                         ),
                       ),
                     const SizedBox(height: 24),
-                    _buildEndOfHistory(),
+                    _buildEndOfHistory(context),
                   ],
                 ),
               ),
@@ -110,8 +117,8 @@ class SyncHistoryScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       height: 56,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Color(0x08000000),
@@ -122,12 +129,12 @@ class SyncHistoryScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.emergency, color: AppColors.primary),
+          Icon(Icons.emergency, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
           Text(
             'RapidTriage',
             style: AppTypography.textTheme.titleMedium?.copyWith(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -140,12 +147,14 @@ class SyncHistoryScreen extends ConsumerWidget {
                 final s = ref.read(syncControllerProvider);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(s.isConnected
-                        ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
-                        : 'No internet connection'),
+                    content: Text(
+                      s.isConnected
+                          ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
+                          : 'No internet connection',
+                    ),
                     backgroundColor: s.isConnected
-                        ? AppColors.primary
-                        : AppColors.error,
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.error,
                   ),
                 );
               }
@@ -162,6 +171,7 @@ class SyncHistoryScreen extends ConsumerWidget {
     required int synced,
     required int failed,
     required int pending,
+    required BuildContext context,
   }) {
     return Column(
       children: [
@@ -171,7 +181,7 @@ class SyncHistoryScreen extends ConsumerWidget {
               child: _StatCard(
                 label: 'Total Records',
                 value: total.toString(),
-                color: AppColors.primary,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(width: 8),
@@ -179,8 +189,8 @@ class SyncHistoryScreen extends ConsumerWidget {
               child: _StatCard(
                 label: 'Synced',
                 value: synced.toString(),
-                color: AppColors.primary,
-                bgColor: AppColors.primaryContainer,
+                color: Theme.of(context).colorScheme.primary,
+                bgColor: Theme.of(context).colorScheme.primaryContainer,
               ),
             ),
           ],
@@ -192,8 +202,8 @@ class SyncHistoryScreen extends ConsumerWidget {
               child: _StatCard(
                 label: 'Failed',
                 value: failed.toString(),
-                color: AppColors.error,
-                bgColor: AppColors.errorContainer,
+                color: Theme.of(context).colorScheme.error,
+                bgColor: Theme.of(context).colorScheme.errorContainer,
               ),
             ),
             const SizedBox(width: 8),
@@ -201,8 +211,8 @@ class SyncHistoryScreen extends ConsumerWidget {
               child: _StatCard(
                 label: 'Pending',
                 value: pending.toString(),
-                color: AppColors.onSurfaceVariant,
-                bgColor: AppColors.surfaceContainerHighest,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                bgColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               ),
             ),
           ],
@@ -211,7 +221,7 @@ class SyncHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionBar(WidgetRef ref) {
+  Widget _buildActionBar(WidgetRef ref, BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -219,7 +229,7 @@ class SyncHistoryScreen extends ConsumerWidget {
           child: Text(
             'Recent Activity',
             style: AppTypography.textTheme.titleLarge?.copyWith(
-              color: AppColors.onSurface,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -231,8 +241,8 @@ class SyncHistoryScreen extends ConsumerWidget {
           icon: const Icon(Icons.refresh, size: 20),
           label: const Text('Refresh'),
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.onPrimary,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(9999),
             ),
@@ -244,20 +254,24 @@ class SyncHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEndOfHistory() {
+  Widget _buildEndOfHistory(BuildContext context) {
     return Row(
       children: [
-        const Expanded(child: Divider(color: AppColors.outlineVariant)),
+        Expanded(
+          child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'END OF HISTORY',
             style: AppTypography.textTheme.labelMedium?.copyWith(
-              color: AppColors.outline,
+              color: Theme.of(context).colorScheme.outline,
             ),
           ),
         ),
-        const Expanded(child: Divider(color: AppColors.outlineVariant)),
+        Expanded(
+          child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
+        ),
       ],
     );
   }
@@ -281,10 +295,12 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: bgColor ?? AppColors.surfaceContainerLow,
+        color: bgColor ?? Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: bgColor != null ? color : AppColors.outlineVariant,
+          color: bgColor != null
+              ? color
+              : Theme.of(context).colorScheme.outlineVariant,
         ),
       ),
       child: Column(
@@ -293,11 +309,13 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: AppTypography.textTheme.labelMedium?.copyWith(
-              color: bgColor != null && bgColor == AppColors.primaryContainer
-                  ? AppColors.onPrimaryContainer
-                  : bgColor == AppColors.errorContainer
-                  ? AppColors.onErrorContainer
-                  : AppColors.onSurfaceVariant,
+              color:
+                  bgColor != null &&
+                      bgColor == Theme.of(context).colorScheme.primaryContainer
+                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                  : bgColor == Theme.of(context).colorScheme.errorContainer
+                  ? Theme.of(context).colorScheme.onErrorContainer
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
               letterSpacing: 1,
             ),
           ),
@@ -309,11 +327,13 @@ class _StatCard extends StatelessWidget {
                 value,
                 style: AppTypography.textTheme.headlineMedium?.copyWith(
                   color:
-                      bgColor != null && bgColor == AppColors.primaryContainer
-                      ? AppColors.onPrimaryContainer
-                      : bgColor == AppColors.errorContainer
-                      ? AppColors.error
-                      : AppColors.primary,
+                      bgColor != null &&
+                          bgColor ==
+                              Theme.of(context).colorScheme.primaryContainer
+                      ? Theme.of(context).colorScheme.onPrimaryContainer
+                      : bgColor == Theme.of(context).colorScheme.errorContainer
+                      ? Theme.of(context).colorScheme.error
+                      : Theme.of(context).colorScheme.primary,
                 ),
               ),
               if (label == 'Synced') const Icon(Icons.check_circle, size: 20),
@@ -341,7 +361,7 @@ class _SyncRecordCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         border: Border(left: BorderSide(color: priorityColor, width: 4)),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
@@ -366,9 +386,9 @@ class _SyncRecordCard extends StatelessWidget {
                   ? Icons.cloud_off
                   : Icons.cloud_sync,
               color: isSynced
-                  ? AppColors.primary
+                  ? Theme.of(context).colorScheme.primary
                   : isFailed
-                  ? AppColors.error
+                  ? Theme.of(context).colorScheme.error
                   : AppColors.failed,
               size: 24,
             ),
@@ -381,14 +401,14 @@ class _SyncRecordCard extends StatelessWidget {
                 Text(
                   record.patient.name,
                   style: AppTypography.textTheme.titleMedium?.copyWith(
-                    color: AppColors.onSurface,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '${_getPriorityLabel(record.priority)} \u2022 ${record.chiefComplaint}',
                   style: AppTypography.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -397,7 +417,7 @@ class _SyncRecordCard extends StatelessWidget {
                 Text(
                   _formatTime(record.createdAt),
                   style: AppTypography.textTheme.labelMedium?.copyWith(
-                    color: AppColors.outline,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                 ),
               ],
@@ -411,16 +431,16 @@ class _SyncRecordCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: isSynced
-                      ? AppColors.primary.withOpacity(0.15)
+                      ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
                       : isFailed
-                      ? AppColors.error.withOpacity(0.15)
+                      ? Theme.of(context).colorScheme.error.withOpacity(0.15)
                       : AppColors.failed.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(9999),
                   border: Border.all(
                     color: isSynced
-                        ? AppColors.primary.withOpacity(0.2)
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
                         : isFailed
-                        ? AppColors.error.withOpacity(0.2)
+                        ? Theme.of(context).colorScheme.error.withOpacity(0.2)
                         : AppColors.failed.withOpacity(0.2),
                   ),
                 ),
@@ -428,9 +448,9 @@ class _SyncRecordCard extends StatelessWidget {
                   statusLabel,
                   style: AppTypography.textTheme.labelMedium?.copyWith(
                     color: isSynced
-                        ? AppColors.primary
+                        ? Theme.of(context).colorScheme.primary
                         : isFailed
-                        ? AppColors.error
+                        ? Theme.of(context).colorScheme.error
                         : AppColors.failed,
                   ),
                 ),
@@ -441,8 +461,8 @@ class _SyncRecordCard extends StatelessWidget {
                   isFailed ? Icons.replay : Icons.visibility,
                   size: 20,
                   color: isFailed
-                      ? AppColors.primary
-                      : AppColors.onSurfaceVariant,
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 onPressed: isFailed
                     ? () {

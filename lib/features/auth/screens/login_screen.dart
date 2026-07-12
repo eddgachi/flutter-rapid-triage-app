@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_radius.dart';
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../../../core/theme/app_typography.dart';
@@ -76,8 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginMobile),
       height: AppSpacing.touchTargetMin,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Color(0x08000000),
@@ -88,24 +87,28 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.emergency, color: AppColors.primary),
+          Icon(Icons.emergency, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: AppSpacing.sm),
           Text(
             'RapidTriage',
             style: AppTypography.textTheme.headlineSmall?.copyWith(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const Spacer(),
-          Icon(Icons.cloud_sync, color: AppColors.onSurfaceVariant, size: 20),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            'SYNCED',
-            style: AppTypography.textTheme.labelMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
-            ),
-          ),
+          // const Spacer(),
+          // Icon(
+          //   Icons.cloud_sync,
+          //   color: Theme.of(context).colorScheme.onSurfaceVariant,
+          //   size: 20,
+          // ),
+          // const SizedBox(width: AppSpacing.xs),
+          // Text(
+          //   'SYNCED',
+          //   style: AppTypography.textTheme.labelMedium?.copyWith(
+          //     color: Theme.of(context).colorScheme.onSurfaceVariant,
+          //   ),
+          // ),
         ],
       ),
     );
@@ -123,17 +126,17 @@ class _LoginScreenState extends State<LoginScreen> {
               BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8),
             ],
           ),
-          child: const Icon(
+          child: Icon(
             Icons.emergency,
             size: 48,
-            color: AppColors.primary,
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         Text(
           'System Access',
           style: AppTypography.textTheme.headlineMedium?.copyWith(
-            color: AppColors.onSurface,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -141,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
           'Please authenticate to access the triage queue. Clinical credentials required.',
           textAlign: TextAlign.center,
           style: AppTypography.textTheme.bodyMedium?.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -152,9 +155,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.outlineVariant),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         children: [
@@ -165,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 'Email or Clinical ID',
                 style: AppTypography.textTheme.labelLarge?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -173,20 +176,27 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(
                   hintText: 'name@hospital.org',
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.person_outline,
-                    color: AppColors.outline,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                   filled: true,
-                  fillColor: AppColors.surface,
-                  border: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.outline),
+                  fillColor: Theme.of(context).colorScheme.surface,
+                  border: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
-                  enabledBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.outline),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primary, width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -200,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 'Security Password',
                 style: AppTypography.textTheme.labelLarge?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -209,30 +219,37 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   hintText: '••••••••',
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.lock_outline,
-                    color: AppColors.outline,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
-                      color: AppColors.onSurfaceVariant,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     onPressed: () =>
                         setState(() => _obscurePassword = !_obscurePassword),
                   ),
                   filled: true,
-                  fillColor: AppColors.surface,
-                  border: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.outline),
+                  fillColor: Theme.of(context).colorScheme.surface,
+                  border: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
-                  enabledBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.outline),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primary, width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -253,7 +270,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onChanged: (v) => setState(() => _rememberMe = v!),
                       fillColor: WidgetStateProperty.resolveWith(
                         (states) => states.contains(WidgetState.selected)
-                            ? AppColors.primary
+                            ? Theme.of(context).colorScheme.primary
                             : null,
                       ),
                     ),
@@ -262,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Remember Me',
                     style: AppTypography.textTheme.labelMedium?.copyWith(
-                      color: AppColors.onSurface,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -272,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Text(
                   'Forgot Password?',
                   style: AppTypography.textTheme.labelMedium?.copyWith(
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -287,19 +304,19 @@ class _LoginScreenState extends State<LoginScreen> {
             child: FilledButton(
               onPressed: _isLoading ? null : _handleLogin,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.onPrimary,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
               ),
               child: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.onPrimary,
+                        color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     )
                   : Text(
@@ -313,14 +330,14 @@ class _LoginScreenState extends State<LoginScreen> {
           Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainerHighest,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.offline_bolt,
-                  color: AppColors.tertiary,
+                  color: Theme.of(context).colorScheme.tertiary,
                   size: 20,
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -329,14 +346,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextSpan(
                       text: 'Offline Login Enabled: ',
                       style: AppTypography.textTheme.labelMedium?.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       children: [
                         TextSpan(
                           text:
                               'You can authenticate without network if you have logged in recently.',
                           style: AppTypography.textTheme.labelMedium?.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.normal,
                           ),
                         ),
@@ -358,7 +377,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           'or authenticate with',
           style: AppTypography.textTheme.labelMedium?.copyWith(
-            color: AppColors.outline,
+            color: Theme.of(context).colorScheme.outline,
             letterSpacing: 2,
           ),
         ),
@@ -368,13 +387,16 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 64,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.outlineVariant, width: 2),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              width: 2,
+            ),
           ),
           child: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.fingerprint,
               size: 32,
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
             ),
             onPressed: () {},
           ),
@@ -383,7 +405,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           'Biometric ID',
           style: AppTypography.textTheme.labelMedium?.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -400,7 +422,7 @@ class _LoginScreenState extends State<LoginScreen> {
         AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
         boxShadow: [
           BoxShadow(
@@ -427,16 +449,20 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 'Central Database Connected',
                 style: AppTypography.textTheme.labelMedium?.copyWith(
-                  color: AppColors.onSurface,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
-              Container(width: 1, height: 16, color: AppColors.outlineVariant),
+              Container(
+                width: 1,
+                height: 16,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
               const SizedBox(width: AppSpacing.md),
               Text(
                 'v1.0.4 - Production',
                 style: AppTypography.textTheme.labelMedium?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -446,7 +472,7 @@ class _LoginScreenState extends State<LoginScreen> {
             '\u00a9 2024 Emergency Services Network. Property of Metropolitan General Hospital.',
             textAlign: TextAlign.center,
             style: AppTypography.textTheme.labelMedium?.copyWith(
-              color: AppColors.outline,
+              color: Theme.of(context).colorScheme.outline,
               fontSize: 11,
             ),
           ),

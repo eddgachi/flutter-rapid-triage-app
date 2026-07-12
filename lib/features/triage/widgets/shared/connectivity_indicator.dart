@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../controllers/sync_controller.dart';
 
@@ -16,8 +15,12 @@ class ConnectivityIndicator extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: syncState.isConnected
-            ? AppColors.secondaryContainer.withOpacity(0.3)
-            : AppColors.errorContainer.withOpacity(0.3),
+            ? Theme.of(
+                context,
+              ).colorScheme.secondaryContainer.withValues(alpha: 0.3)
+            : Theme.of(
+                context,
+              ).colorScheme.errorContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(9999),
       ),
       child: Row(
@@ -31,19 +34,21 @@ class ConnectivityIndicator extends ConsumerWidget {
                 : Icons.cloud_off,
             size: 18,
             color: syncState.isSyncing
-                ? AppColors.primary
+                ? Theme.of(context).colorScheme.primary
                 : syncState.isConnected
-                ? AppColors.onSecondaryContainer
-                : AppColors.error,
+                ? Theme.of(context).colorScheme.onSecondaryContainer
+                : Theme.of(context).colorScheme.error,
           ),
           if (syncState.isSyncing) ...{
             const SizedBox(width: 4),
-            const SizedBox(
+            SizedBox(
               width: 12,
               height: 12,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           },
@@ -56,8 +61,8 @@ class ConnectivityIndicator extends ConsumerWidget {
                 : 'Offline',
             style: AppTypography.textTheme.labelMedium?.copyWith(
               color: syncState.isConnected
-                  ? AppColors.onSecondaryContainer
-                  : AppColors.error,
+                  ? Theme.of(context).colorScheme.onSecondaryContainer
+                  : Theme.of(context).colorScheme.error,
             ),
           ),
         ],
@@ -90,8 +95,8 @@ class SyncButton extends ConsumerWidget {
                           : 'No internet connection',
                     ),
                     backgroundColor: syncState.isConnected
-                        ? AppColors.primary
-                        : AppColors.error,
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.error,
                     duration: const Duration(seconds: 2),
                   ),
                 );
@@ -109,10 +114,10 @@ class SyncButton extends ConsumerWidget {
               : Icons.cloud_off,
           size: size,
           color: syncState.isSyncing
-              ? AppColors.primary
+              ? Theme.of(context).colorScheme.primary
               : syncState.isConnected
-              ? AppColors.onSurfaceVariant
-              : AppColors.error,
+              ? Theme.of(context).colorScheme.onSurfaceVariant
+              : Theme.of(context).colorScheme.error,
         ),
       ),
     );
@@ -131,16 +136,20 @@ class OfflineBanner extends ConsumerWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: AppColors.errorContainer,
+      color: Theme.of(context).colorScheme.errorContainer,
       child: Row(
         children: [
-          Icon(Icons.wifi_off, color: AppColors.error, size: 16),
+          Icon(
+            Icons.wifi_off,
+            color: Theme.of(context).colorScheme.error,
+            size: 16,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Offline Mode - Changes will sync when connected',
               style: AppTypography.textTheme.bodySmall?.copyWith(
-                color: AppColors.error,
+                color: Theme.of(context).colorScheme.error,
               ),
             ),
           ),

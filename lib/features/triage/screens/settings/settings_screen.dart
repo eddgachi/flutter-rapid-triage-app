@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rapid_triage/app/theme_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,6 +14,9 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+    final isDarkMode = themeMode == ThemeMode.dark;
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -28,14 +32,15 @@ class SettingsScreen extends ConsumerWidget {
                     Text(
                       'Settings',
                       style: AppTypography.textTheme.headlineMedium?.copyWith(
-                        color: AppColors.onSurface,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _buildProfile(),
+                    _buildProfile(context),
                     const SizedBox(height: 24),
                     _buildSection(
                       'Organization',
+                      context,
                       children: [
                         _SettingTile(
                           icon: Icons.local_hospital,
@@ -55,12 +60,15 @@ class SettingsScreen extends ConsumerWidget {
                     const SizedBox(height: 24),
                     _buildSection(
                       'Preferences',
+                      context,
                       children: [
                         _SettingToggle(
                           icon: Icons.dark_mode,
                           title: 'Dark Mode',
-                          value: false,
-                          onChanged: (_) {},
+                          value: isDarkMode,
+                          onChanged: (_) {
+                            ref.read(themeModeProvider.notifier).toggle();
+                          },
                         ),
                         const _SettingDivider(),
                         _SettingTile(
@@ -74,6 +82,7 @@ class SettingsScreen extends ConsumerWidget {
                     const SizedBox(height: 24),
                     _buildSection(
                       'Hardware Integrations',
+                      context,
                       children: [
                         _SettingToggle(
                           icon: Icons.location_on,
@@ -93,6 +102,7 @@ class SettingsScreen extends ConsumerWidget {
                     const SizedBox(height: 24),
                     _buildSection(
                       'Data & Synchronization',
+                      context,
                       children: [
                         _SettingToggle(
                           icon: Icons.sync,
@@ -112,6 +122,7 @@ class SettingsScreen extends ConsumerWidget {
                     const SizedBox(height: 24),
                     _buildSection(
                       'Device Storage',
+                      context,
                       children: [
                         _SettingTile(
                           icon: Icons.download,
@@ -124,9 +135,9 @@ class SettingsScreen extends ConsumerWidget {
                           height: 56,
                           child: Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.delete_sweep,
-                                color: AppColors.error,
+                                color: Theme.of(context).colorScheme.error,
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -140,7 +151,9 @@ class SettingsScreen extends ConsumerWidget {
                                 '124 MB',
                                 style: AppTypography.textTheme.labelMedium
                                     ?.copyWith(
-                                      color: AppColors.onSurfaceVariant,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                               ),
                             ],
@@ -157,8 +170,12 @@ class SettingsScreen extends ConsumerWidget {
                         icon: const Icon(Icons.logout),
                         label: const Text('Logout'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.errorContainer,
-                          foregroundColor: AppColors.onErrorContainer,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.errorContainer,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onErrorContainer,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(9999),
                           ),
@@ -172,15 +189,20 @@ class SettingsScreen extends ConsumerWidget {
                           Text(
                             'RapidTriage Emergency Protocol Suite',
                             style: AppTypography.textTheme.labelMedium
-                                ?.copyWith(color: AppColors.onSurfaceVariant),
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
                           ),
                           Text(
                             'Version 4.12.0 (Build 8829)',
                             style: AppTypography.textTheme.labelMedium
                                 ?.copyWith(
-                                  color: AppColors.onSurfaceVariant.withOpacity(
-                                    0.7,
-                                  ),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant
+                                      .withOpacity(0.7),
                                 ),
                           ),
                         ],
@@ -193,7 +215,7 @@ class SettingsScreen extends ConsumerWidget {
                         child: Text(
                           'About RapidTriage',
                           style: AppTypography.textTheme.labelLarge?.copyWith(
-                            color: AppColors.primary,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                       ),
@@ -213,8 +235,8 @@ class SettingsScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       height: 56,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Color(0x08000000),
@@ -230,7 +252,7 @@ class SettingsScreen extends ConsumerWidget {
           Text(
             'RapidTriage',
             style: AppTypography.textTheme.titleMedium?.copyWith(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -242,12 +264,14 @@ class SettingsScreen extends ConsumerWidget {
                 final s = ref.read(syncControllerProvider);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(s.isConnected
-                        ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
-                        : 'No internet connection'),
+                    content: Text(
+                      s.isConnected
+                          ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
+                          : 'No internet connection',
+                    ),
                     backgroundColor: s.isConnected
                         ? AppColors.primary
-                        : AppColors.error,
+                        : Theme.of(context).colorScheme.error,
                   ),
                 );
               }
@@ -259,11 +283,11 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildProfile() {
+  Widget _buildProfile(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.outlineVariant),
       ),
@@ -286,33 +310,40 @@ class SettingsScreen extends ConsumerWidget {
                 Text(
                   'James Wilson',
                   style: AppTypography.textTheme.titleLarge?.copyWith(
-                    color: AppColors.onSurface,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Senior Lead Paramedic',
                   style: AppTypography.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Badge #PR-4492',
                   style: AppTypography.textTheme.labelMedium?.copyWith(
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.edit, color: AppColors.onSurfaceVariant),
+          Icon(
+            Icons.edit,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSection(String title, {required List<Widget> children}) {
+  Widget _buildSection(
+    String title,
+    BuildContext context, {
+    required List<Widget> children,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -321,13 +352,13 @@ class SettingsScreen extends ConsumerWidget {
           child: Text(
             title,
             style: AppTypography.textTheme.labelLarge?.copyWith(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppColors.outlineVariant),
           ),
@@ -358,7 +389,7 @@ class _SettingTile extends StatelessWidget {
       height: 56,
       child: Row(
         children: [
-          Icon(icon, color: AppColors.onSurfaceVariant),
+          Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -368,21 +399,24 @@ class _SettingTile extends StatelessWidget {
                 Text(
                   title,
                   style: AppTypography.textTheme.bodyLarge?.copyWith(
-                    color: AppColors.onSurface,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 if (subtitle != null)
                   Text(
                     subtitle!,
                     style: AppTypography.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
               ],
             ),
           ),
           if (trailing != null)
-            Icon(trailing, color: AppColors.onSurfaceVariant),
+            Icon(
+              trailing,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
         ],
       ),
     );
@@ -409,20 +443,20 @@ class _SettingToggle extends StatelessWidget {
       height: 56,
       child: Row(
         children: [
-          Icon(icon, color: AppColors.onSurfaceVariant),
+          Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               title,
               style: AppTypography.textTheme.bodyLarge?.copyWith(
-                color: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeColor: Theme.of(context).colorScheme.primary,
           ),
         ],
       ),
@@ -435,10 +469,10 @@ class _SettingDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    return Divider(
       height: 1,
       indent: 56,
-      color: AppColors.outlineVariant,
+      color: Theme.of(context).colorScheme.outlineVariant,
     );
   }
 }

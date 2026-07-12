@@ -65,6 +65,20 @@ class AppColors {
   static const Color background = Color(0xFFFDF8FD);
   static const Color onBackground = Color(0xFF1C1B1F);
 
+  // ── Dark theme surfaces ──────────────────────────────────
+  static const Color darkSurface = Color(0xFF1C1B1F);
+  static const Color darkOnSurface = Color(0xFFE5E1E7);
+  static const Color darkOnSurfaceVariant = Color(0xFFC3C6D6);
+  static const Color darkSurfaceContainerLowest = Color(0xFF141317);
+  static const Color darkSurfaceContainerLow = Color(0xFF1C1B1F);
+  static const Color darkSurfaceContainer = Color(0xFF252429);
+  static const Color darkSurfaceContainerHigh = Color(0xFF2F2E33);
+  static const Color darkSurfaceContainerHighest = Color(0xFF3A393E);
+  static const Color darkSurfaceDim = Color(0xFF141317);
+  static const Color darkSurfaceBright = Color(0xFF3A393E);
+  static const Color darkInverseSurface = Color(0xFFE5E1E7);
+  static const Color darkSurfaceVariant = Color(0xFF434654);
+
   // Triage Priority Colors
   static const Color p1Critical = Color(0xFFBA1A1A);
   static const Color p2Urgent = Color(0xFFFF8C00);

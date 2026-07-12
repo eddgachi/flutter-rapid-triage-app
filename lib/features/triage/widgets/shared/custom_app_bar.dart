@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../../../core/theme/app_typography.dart';
 
@@ -26,8 +25,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Color(0x08000000),
@@ -49,7 +48,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 if (showBack)
                   IconButton(
                     icon: const Icon(Icons.arrow_back),
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     onPressed: onBack ?? () => Navigator.of(context).pop(),
                   ),
                 if (showBack) const SizedBox(width: AppSpacing.sm),
@@ -61,7 +60,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                       Text(
                         title,
                         style: AppTypography.textTheme.titleLarge?.copyWith(
-                          color: AppColors.primary,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

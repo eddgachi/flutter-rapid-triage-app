@@ -14,19 +14,19 @@ class AboutScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(),
+            _buildAppBar(context),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 100),
                 child: Column(
                   children: [
-                    _buildLogoSection(),
+                    _buildLogoSection(context),
                     const SizedBox(height: 24),
-                    _buildTechStack(),
+                    _buildTechStack(context),
                     const SizedBox(height: 24),
-                    _buildLegalSection(),
+                    _buildLegalSection(context),
                     const SizedBox(height: 32),
-                    _buildFooter(),
+                    _buildFooter(context),
                   ],
                 ),
               ),
@@ -38,12 +38,12 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       height: 48,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Color(0x08000000),
@@ -59,25 +59,30 @@ class AboutScreen extends StatelessWidget {
           Text(
             'RapidTriage',
             style: AppTypography.textTheme.headlineSmall?.copyWith(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
           const Spacer(),
-          const Icon(Icons.cloud_sync, color: AppColors.onSurfaceVariant),
+          Icon(
+            Icons.cloud_sync,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildLogoSection() {
+  Widget _buildLogoSection(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.outlineVariant.withOpacity(0.3)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+        ),
       ),
       child: Column(
         children: [
@@ -85,30 +90,30 @@ class AboutScreen extends StatelessWidget {
             width: 128,
             height: 128,
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.emergency,
               size: 64,
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           const SizedBox(height: 16),
           Text(
             'RapidTriage',
             style: AppTypography.textTheme.headlineLarge?.copyWith(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Version 2.4.0-Stable',
             style: AppTypography.textTheme.labelLarge?.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               letterSpacing: 2,
             ),
           ),
@@ -116,21 +121,21 @@ class AboutScreen extends StatelessWidget {
           Container(
             width: 64,
             height: 1,
-            color: AppColors.primary.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
           ),
           const SizedBox(height: 16),
           Text(
             'Emergency Response Systems Group',
             style: AppTypography.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              color: AppColors.onSurface,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             'Clinical Decision Support Unit',
             style: AppTypography.textTheme.bodyMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -138,18 +143,22 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTechStack() {
+  Widget _buildTechStack(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Icon(Icons.memory, color: AppColors.primary, size: 20),
+            Icon(
+              Icons.memory,
+              color: Theme.of(context).colorScheme.primary,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Text(
               'System Core',
               style: AppTypography.textTheme.titleLarge?.copyWith(
-                color: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -162,7 +171,7 @@ class AboutScreen extends StatelessWidget {
                 label: 'Framework',
                 title: 'Flutter',
                 subtitle: 'High-performance cross-platform rendering engine.',
-                labelColor: AppColors.primary,
+                labelColor: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(width: 8),
@@ -193,7 +202,7 @@ class AboutScreen extends StatelessWidget {
                 label: 'Navigation',
                 title: 'GoRouter',
                 subtitle: 'Declarative deep-linking and routing logic.',
-                labelColor: AppColors.onSurface,
+                labelColor: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -202,18 +211,22 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLegalSection() {
+  Widget _buildLegalSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Icon(Icons.gavel, color: AppColors.primary, size: 20),
+            Icon(
+              Icons.gavel,
+              color: Theme.of(context).colorScheme.primary,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Text(
               'Compliance & Legal',
               style: AppTypography.textTheme.titleLarge?.copyWith(
-                color: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -228,20 +241,20 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(BuildContext context) {
     return Column(
       children: [
         Text(
           '\u00a9 2024 Emergency Response Systems Group',
           style: AppTypography.textTheme.bodyMedium?.copyWith(
-            color: AppColors.outline,
+            color: Theme.of(context).colorScheme.outline,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           'Designed for clinical environments.',
           style: AppTypography.textTheme.labelMedium?.copyWith(
-            color: AppColors.outlineVariant,
+            color: Theme.of(context).colorScheme.outlineVariant,
           ),
         ),
       ],
@@ -267,9 +280,11 @@ class _TechCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.outlineVariant.withOpacity(0.2)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,14 +302,14 @@ class _TechCard extends StatelessWidget {
           Text(
             title,
             style: AppTypography.textTheme.titleMedium?.copyWith(
-              color: AppColors.onSurface,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
             style: AppTypography.textTheme.bodyMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 12,
             ),
           ),
@@ -315,23 +330,23 @@ class _LegalLink extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.onSurfaceVariant),
+          Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               label,
               style: AppTypography.textTheme.titleMedium?.copyWith(
-                color: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
-          const Icon(Icons.chevron_right, color: AppColors.outline),
+          Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.outline),
         ],
       ),
     );

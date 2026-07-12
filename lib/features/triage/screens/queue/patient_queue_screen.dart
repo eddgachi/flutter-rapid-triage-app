@@ -49,7 +49,7 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(),
+            _buildAppBar(context),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 100),
@@ -77,20 +77,26 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
                               Icon(
                                 Icons.people_outline,
                                 size: 64,
-                                color: AppColors.outline,
+                                color: Theme.of(context).colorScheme.outline,
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 'No patients in queue',
                                 style: AppTypography.textTheme.headlineSmall
-                                    ?.copyWith(color: AppColors.onSurface),
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                    ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 'Patient records will appear here once they are created.',
                                 style: AppTypography.textTheme.bodyMedium
                                     ?.copyWith(
-                                      color: AppColors.onSurfaceVariant,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                 textAlign: TextAlign.center,
                               ),
@@ -117,8 +123,8 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
         padding: const EdgeInsets.only(bottom: 80),
         child: FloatingActionButton(
           onPressed: () => context.push('/intake'),
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.onPrimary,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
@@ -129,13 +135,13 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(BuildContext context) {
     final syncState = ref.watch(syncControllerProvider);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       height: 56,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Color(0x08000000),
@@ -146,12 +152,12 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.emergency, color: AppColors.primary),
+          Icon(Icons.emergency, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
           Text(
             'RapidTriage',
             style: AppTypography.textTheme.titleMedium?.copyWith(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -159,7 +165,11 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
           if (!syncState.isConnected)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: Icon(Icons.wifi_off, color: AppColors.error, size: 18),
+              child: Icon(
+                Icons.wifi_off,
+                color: Theme.of(context).colorScheme.error,
+                size: 18,
+              ),
             ),
           GestureDetector(
             onTap: () async {
@@ -169,12 +179,14 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
                 final s = ref.read(syncControllerProvider);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(s.isConnected
-                        ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
-                        : 'No internet connection'),
+                    content: Text(
+                      s.isConnected
+                          ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
+                          : 'No internet connection',
+                    ),
                     backgroundColor: s.isConnected
-                        ? AppColors.primary
-                        : AppColors.error,
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.error,
                   ),
                 );
               }
@@ -190,7 +202,7 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
@@ -200,9 +212,9 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
         },
         decoration: InputDecoration(
           hintText: 'Search patient name or ID...',
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search,
-            color: AppColors.onSurfaceVariant,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -284,19 +296,19 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
         Text(
           'Patient Queue',
           style: AppTypography.textTheme.titleLarge?.copyWith(
-            color: AppColors.onSurface,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerHigh,
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
             '$pendingCount Pending',
             style: AppTypography.textTheme.labelMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ),
@@ -324,16 +336,16 @@ class _FilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           color: isActive
-              ? AppColors.secondaryContainer
-              : AppColors.surfaceContainerHigh,
+              ? Theme.of(context).colorScheme.secondaryContainer
+              : Theme.of(context).colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(9999),
         ),
         child: Text(
           label,
           style: AppTypography.textTheme.labelLarge?.copyWith(
             color: isActive
-                ? AppColors.onSecondaryContainer
-                : AppColors.onSurfaceVariant,
+                ? Theme.of(context).colorScheme.onSecondaryContainer
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ),
@@ -348,15 +360,17 @@ class _QueueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final priorityColor = _getPriorityColor(record.priority);
+    final priorityColor = _getPriorityColor(record.priority, context);
     final isSynced = record.syncStatus == SyncStatus.synced;
 
     return GestureDetector(
       onTap: () => context.go('/patient/${record.id}'),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          border: Border.all(color: AppColors.outlineVariant),
+          color: Theme.of(context).colorScheme.surfaceContainerLowest,
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -382,7 +396,7 @@ class _QueueCard extends StatelessWidget {
                         Text(
                           record.patient.name,
                           style: AppTypography.textTheme.titleMedium?.copyWith(
-                            color: AppColors.onSurface,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         Container(
@@ -412,16 +426,22 @@ class _QueueCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.schedule,
                               size: 16,
-                              color: AppColors.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               _formatTime(record.createdAt),
                               style: AppTypography.textTheme.labelMedium
-                                  ?.copyWith(color: AppColors.onSurfaceVariant),
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                           ],
                         ),
@@ -431,8 +451,10 @@ class _QueueCard extends StatelessWidget {
                               isSynced ? Icons.check_circle : Icons.schedule,
                               size: 16,
                               color: isSynced
-                                  ? AppColors.primary
-                                  : AppColors.onSurfaceVariant,
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -440,8 +462,10 @@ class _QueueCard extends StatelessWidget {
                               style: AppTypography.textTheme.labelMedium
                                   ?.copyWith(
                                     color: isSynced
-                                        ? AppColors.primary
-                                        : AppColors.onSurfaceVariant,
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
                                   ),
                             ),
                           ],
@@ -458,18 +482,18 @@ class _QueueCard extends StatelessWidget {
     );
   }
 
-  Color _getPriorityColor(int priority) {
+  Color _getPriorityColor(int priority, BuildContext context) {
     switch (priority) {
       case 1:
-        return AppColors.error;
+        return Theme.of(context).colorScheme.error;
       case 2:
         return AppColors.p2Urgent;
       case 3:
         return AppColors.p3Delayed;
       case 4:
-        return AppColors.inverseSurface;
+        return Theme.of(context).colorScheme.inverseSurface;
       default:
-        return AppColors.primary;
+        return Theme.of(context).colorScheme.primary;
     }
   }
 

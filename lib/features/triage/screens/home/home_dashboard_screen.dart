@@ -92,8 +92,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginMobile),
       height: AppSpacing.touchTargetMin,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Color(0x08000000),
@@ -104,7 +104,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.emergency, color: AppColors.primary),
+          Icon(Icons.emergency, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: AppSpacing.sm),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -113,13 +113,13 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
               Text(
                 'RapidTriage',
                 style: AppTypography.textTheme.titleMedium?.copyWith(
-                  color: AppColors.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               Text(
                 'City General Hospital',
                 style: AppTypography.textTheme.labelMedium?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -142,8 +142,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                           : 'No internet connection',
                     ),
                     backgroundColor: s.isConnected
-                        ? AppColors.primary
-                        : AppColors.error,
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.error,
                   ),
                 );
               }
@@ -158,16 +158,20 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   Widget _buildOfflineBanner() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: AppColors.errorContainer,
+      color: Theme.of(context).colorScheme.errorContainer,
       child: Row(
         children: [
-          Icon(Icons.wifi_off, color: AppColors.error, size: 16),
+          Icon(
+            Icons.wifi_off,
+            color: Theme.of(context).colorScheme.error,
+            size: 16,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Offline Mode - Changes will sync when connected',
               style: AppTypography.textTheme.bodySmall?.copyWith(
-                color: AppColors.error,
+                color: Theme.of(context).colorScheme.error,
               ),
             ),
           ),
@@ -186,13 +190,15 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
             Text(
               'Welcome, John Doe',
               style: AppTypography.textTheme.headlineSmall?.copyWith(
-                color: AppColors.onBackground,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             if (syncState.isSyncing)
-              const CircularProgressIndicator(
+              CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).colorScheme.primary,
+                ),
               ),
           ],
         ),
@@ -200,7 +206,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
         Text(
           'Emergency Triage Interface Active',
           style: AppTypography.textTheme.bodyMedium?.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         if (syncState.error != null)
@@ -209,18 +215,22 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.errorContainer,
+                color: Theme.of(context).colorScheme.errorContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.error, color: AppColors.error, size: 16),
+                  Icon(
+                    Icons.error,
+                    color: Theme.of(context).colorScheme.error,
+                    size: 16,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       syncState.error!,
                       style: AppTypography.textTheme.bodySmall?.copyWith(
-                        color: AppColors.error,
+                        color: Theme.of(context).colorScheme.error,
                       ),
                     ),
                   ),
@@ -250,8 +260,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                     label: 'Awaiting Sync',
                     value: pendingCount.toString(),
                     icon: Icons.sync_problem,
-                    iconColor: AppColors.primary,
-                    bgColor: AppColors.surfaceContainerLow,
+                    iconColor: Theme.of(context).colorScheme.primary,
+                    bgColor: Theme.of(context).colorScheme.surfaceContainerLow,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -260,8 +270,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                     label: 'Synced',
                     value: syncedCount.toString(),
                     icon: Icons.check_circle,
-                    iconColor: AppColors.secondary,
-                    bgColor: AppColors.surfaceContainerLow,
+                    iconColor: Theme.of(context).colorScheme.secondary,
+                    bgColor: Theme.of(context).colorScheme.surfaceContainerLow,
                   ),
                 ),
               ],
@@ -274,8 +284,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                     label: 'Failed Sync',
                     value: failedCount.toString(),
                     icon: Icons.error,
-                    iconColor: AppColors.error,
-                    bgColor: AppColors.errorContainer,
+                    iconColor: Theme.of(context).colorScheme.error,
+                    bgColor: Theme.of(context).colorScheme.errorContainer,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -284,8 +294,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                     label: 'Critical',
                     value: criticalCount.toString(),
                     icon: Icons.warning_rounded,
-                    iconColor: AppColors.error,
-                    bgColor: AppColors.errorContainer,
+                    iconColor: Theme.of(context).colorScheme.error,
+                    bgColor: Theme.of(context).colorScheme.errorContainer,
                   ),
                 ),
               ],
@@ -303,7 +313,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
         Text(
           'Quick Actions',
           style: AppTypography.textTheme.titleLarge?.copyWith(
-            color: AppColors.onSurface,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -313,8 +323,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
               child: _QuickActionButton(
                 icon: Icons.person_add,
                 label: 'New Triage',
-                color: AppColors.primary,
-                textColor: AppColors.onPrimary,
+                color: Theme.of(context).colorScheme.primary,
+                textColor: Theme.of(context).colorScheme.onPrimary,
                 onTap: () => context.push('/intake'),
               ),
             ),
@@ -323,8 +333,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
               child: _QuickActionButton(
                 icon: Icons.list_alt,
                 label: 'View Queue',
-                color: AppColors.surfaceContainerHighest,
-                textColor: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                textColor: Theme.of(context).colorScheme.onSurface,
                 onTap: () => context.go('/queue'),
               ),
             ),
@@ -337,8 +347,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
               child: _QuickActionButton(
                 icon: Icons.nfc,
                 label: 'Scan NFC',
-                color: AppColors.surfaceContainerHighest,
-                textColor: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                textColor: Theme.of(context).colorScheme.onSurface,
                 onTap: () {
                   // TODO: Implement NFC scanning
                 },
@@ -349,8 +359,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
               child: _QuickActionButton(
                 icon: Icons.sync,
                 label: 'Sync Now',
-                color: AppColors.secondaryContainer,
-                textColor: AppColors.onSecondaryContainer,
+                color: Theme.of(context).colorScheme.secondaryContainer,
+                textColor: Theme.of(context).colorScheme.onSecondaryContainer,
                 onTap: () async {
                   await ref.read(syncControllerProvider.notifier).syncNow();
                   if (mounted) {
@@ -363,8 +373,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                               : 'No internet connection',
                         ),
                         backgroundColor: s.isConnected
-                            ? AppColors.primary
-                            : AppColors.error,
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.error,
                       ),
                     );
                   }
@@ -390,7 +400,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
             Text(
               'Recent Activity',
               style: AppTypography.textTheme.titleLarge?.copyWith(
-                color: AppColors.onSurface,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             TextButton(
@@ -398,7 +408,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
               child: Text(
                 'View All',
                 style: AppTypography.textTheme.labelLarge?.copyWith(
-                  color: AppColors.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ),
@@ -412,7 +422,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
               child: Text(
                 'No recent activity',
                 style: AppTypography.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -453,7 +463,7 @@ class _DashboardCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.outlineVariant),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,7 +472,7 @@ class _DashboardCard extends StatelessWidget {
           Text(
             label,
             style: AppTypography.textTheme.labelLarge?.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           Row(
@@ -471,7 +481,7 @@ class _DashboardCard extends StatelessWidget {
               Text(
                 value,
                 style: AppTypography.textTheme.headlineMedium?.copyWith(
-                  color: AppColors.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               Icon(icon, size: 40, color: iconColor.withOpacity(0.2)),
@@ -533,7 +543,7 @@ class _ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final priorityColor = _getPriorityColor(record.priority);
+    final priorityColor = _getPriorityColor(record.priority, context);
     final isSynced = record.syncStatus == SyncStatus.synced;
 
     return GestureDetector(
@@ -545,8 +555,10 @@ class _ActivityCard extends StatelessWidget {
       child: Container(
         height: 80,
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: Border.all(color: AppColors.outlineVariant),
+          color: Theme.of(context).colorScheme.surface,
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         child: Row(
@@ -573,21 +585,25 @@ class _ActivityCard extends StatelessWidget {
                         Text(
                           record.patient.name,
                           style: AppTypography.textTheme.titleMedium?.copyWith(
-                            color: AppColors.onSurface,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           '${_getPriorityLabel(record.priority)} \u2022 ${_formatTime(record.createdAt)}',
                           style: AppTypography.textTheme.bodyMedium?.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
                     ),
                     Icon(
                       isSynced ? Icons.cloud_done : Icons.cloud_off,
-                      color: isSynced ? AppColors.primary : AppColors.error,
+                      color: isSynced
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.error,
                     ),
                   ],
                 ),
@@ -599,18 +615,18 @@ class _ActivityCard extends StatelessWidget {
     );
   }
 
-  Color _getPriorityColor(int priority) {
+  Color _getPriorityColor(int priority, BuildContext context) {
     switch (priority) {
       case 1:
-        return AppColors.error;
+        return Theme.of(context).colorScheme.error;
       case 2:
         return AppColors.p2Urgent;
       case 3:
         return AppColors.p3Delayed;
       case 4:
-        return AppColors.inverseSurface;
+        return Theme.of(context).colorScheme.inverseSurface;
       default:
-        return AppColors.primary;
+        return Theme.of(context).colorScheme.primary;
     }
   }
 
