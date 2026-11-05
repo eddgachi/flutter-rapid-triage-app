@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
+import 'package:flutter_rapid_triage/core/theme/app_decorations.dart';
 import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
 import 'package:flutter_rapid_triage/core/theme/app_spacing.dart';
 import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
@@ -203,14 +204,8 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
 
   Widget _buildPatientInfoSection() {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
-        ),
-      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: AppDecorations.card(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -249,7 +244,9 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                 decoration: InputDecoration(
                   hintText: 'John Doe',
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.surfaceVariant,
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   border: UnderlineInputBorder(
                     borderSide: BorderSide(
                       color: Theme.of(context).colorScheme.outline,
@@ -376,14 +373,8 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
 
   Widget _buildClinicalSection() {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
-        ),
-      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: AppDecorations.card(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -421,7 +412,9 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                 decoration: InputDecoration(
                   hintText: 'Shortness of breath, chest pain...',
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.surfaceVariant,
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   border: UnderlineInputBorder(
                     borderSide: BorderSide(
                       color: Theme.of(context).colorScheme.outline,
@@ -454,7 +447,9 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
                 decoration: InputDecoration(
                   hintText: 'Observed trauma, vital signs, pupil response...',
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.surfaceVariant,
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   border: UnderlineInputBorder(
                     borderSide: BorderSide(
                       color: Theme.of(context).colorScheme.outline,
@@ -569,74 +564,79 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
     required int priority,
   }) {
     final isSelected = _selectedPriority == priority;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedPriority = priority),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryFixed.withOpacity(0.2)
-              : Theme.of(context).colorScheme.surface,
-          border: Border.all(
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        onTap: () => setState(() => _selectedPriority = priority),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
             color: isSelected
-                ? color
-                : Theme.of(context).colorScheme.outlineVariant,
-            width: isSelected ? 2 : 1,
+                ? AppColors.primaryFixed.withValues(alpha: 0.2)
+                : Theme.of(context).colorScheme.surface,
+            border: Border.all(
+              color: isSelected
+                  ? color
+                  : Theme.of(context).colorScheme.outlineVariant,
+              width: isSelected ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
           ),
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: color.withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: Center(
-                child: Text(
-                  level,
-                  style: AppTypography.textTheme.headlineSmall?.copyWith(
-                    color: level == 'P3' ? Colors.black : Colors.white,
-                    fontWeight: FontWeight.bold,
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Center(
+                  child: Text(
+                    level,
+                    style: AppTypography.textTheme.headlineSmall?.copyWith(
+                      color: level == 'P3' ? Colors.black : Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTypography.textTheme.titleMedium?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w600,
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.textTheme.titleMedium?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: AppTypography.textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    Text(
+                      subtitle,
+                      style: AppTypography.textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            if (showIcon) Icon(Icons.priority_high, color: color, size: 32),
-            if (isSelected) Icon(Icons.check_circle, color: color, size: 24),
-          ],
+              if (showIcon) Icon(Icons.priority_high, color: color, size: 32),
+              if (isSelected) Icon(Icons.check_circle, color: color, size: 24),
+            ],
+          ),
         ),
       ),
     );
@@ -644,14 +644,8 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
 
   Widget _buildLocationSection(IntakeState state) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
-        ),
-      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: AppDecorations.card(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -760,7 +754,7 @@ class _NewTriageIntakeScreenState extends ConsumerState<NewTriageIntakeScreen> {
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -852,43 +846,50 @@ class _GenderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 80,
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.secondaryContainer.withOpacity(0.3)
-              : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Container(
+          height: 80,
+          decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.secondaryContainer
-                : Theme.of(context).colorScheme.outlineVariant,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
+                ? AppColors.secondaryContainer.withValues(alpha: 0.3)
+                : Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(
               color: isSelected
-                  ? AppColors.onSecondaryContainer
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-              size: 28,
+                  ? AppColors.secondaryContainer
+                  : Theme.of(context).colorScheme.outlineVariant,
+              width: isSelected ? 2 : 1,
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppTypography.textTheme.labelLarge?.copyWith(
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
                 color: isSelected
                     ? AppColors.onSecondaryContainer
                     : Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                size: 28,
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: AppTypography.textTheme.labelLarge?.copyWith(
+                  color: isSelected
+                      ? AppColors.onSecondaryContainer
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

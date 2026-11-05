@@ -4,6 +4,7 @@ import '../../../app/app_providers.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../../core/services/location_service.dart';
+import '../../../core/utils/sentinel.dart';
 import '../models/location.dart';
 import '../models/patient.dart';
 import '../models/triage_record.dart';
@@ -32,18 +33,20 @@ class IntakeState {
   IntakeState copyWith({
     bool? isLoading,
     bool? success,
-    String? error,
+    Object? error = unset,
     TriageLocation? currentLocation,
     bool? isLocationLoading,
-    String? locationError,
+    Object? locationError = unset,
   }) {
     return IntakeState(
       isLoading: isLoading ?? this.isLoading,
       success: success ?? this.success,
-      error: error ?? this.error,
+      error: error == unset ? this.error : error as String?,
       currentLocation: currentLocation ?? this.currentLocation,
       isLocationLoading: isLocationLoading ?? this.isLocationLoading,
-      locationError: locationError ?? this.locationError,
+      locationError: locationError == unset
+          ? this.locationError
+          : locationError as String?,
     );
   }
 }
@@ -57,7 +60,10 @@ class IntakeController extends Notifier<IntakeState> {
 
   @override
   IntakeState build() {
-    _getCurrentLocation();
+    // Deferred: _getCurrentLocation() reads `state` (via copyWith), which
+    // isn't valid until build() has returned and the provider has
+    // initialized.
+    Future.microtask(_getCurrentLocation);
     return const IntakeState();
   }
 

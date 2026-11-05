@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
 import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
+import 'package:flutter_rapid_triage/core/theme/app_decorations.dart';
+import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
 import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
+import 'package:flutter_rapid_triage/core/widgets/empty_state_widget.dart';
+import 'package:flutter_rapid_triage/core/widgets/loading_indicator.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/history_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/sync_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
 import 'package:flutter_rapid_triage/features/triage/widgets/shared/bottom_nav_bar.dart';
 import 'package:flutter_rapid_triage/features/triage/widgets/shared/connectivity_indicator.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/custom_app_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class SyncHistoryScreen extends ConsumerWidget {
   const SyncHistoryScreen({super.key});
@@ -51,47 +57,13 @@ class SyncHistoryScreen extends ConsumerWidget {
                     _buildActionBar(ref, context),
                     const SizedBox(height: 16),
                     if (historyState.loading)
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(32.0),
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
+                      const LoadingIndicator()
                     else if (records.isEmpty)
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32.0),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.history,
-                                size: 64,
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No sync history',
-                                style: AppTypography.textTheme.headlineSmall
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Patient records will appear here once they are created.',
-                                style: AppTypography.textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
+                      const EmptyStateWidget(
+                        icon: Icons.history,
+                        title: 'No sync history',
+                        message:
+                            'Patient records will appear here once they are created.',
                       )
                     else
                       ...records.map(
@@ -114,54 +86,30 @@ class SyncHistoryScreen extends ConsumerWidget {
   }
 
   Widget _buildAppBar(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      height: 56,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.emergency, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
-          Text(
-            'RapidTriage',
-            style: AppTypography.textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: () async {
-              await ref.read(syncControllerProvider.notifier).syncNow();
-              ref.invalidate(historyControllerProvider);
-              if (context.mounted) {
-                final s = ref.read(syncControllerProvider);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      s.isConnected
-                          ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
-                          : 'No internet connection',
-                    ),
-                    backgroundColor: s.isConnected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.error,
-                  ),
-                );
-              }
-            },
-            child: const ConnectivityIndicator(),
-          ),
-        ],
+    return CustomAppBar(
+      title: 'RapidTriage',
+      leadingIcon: Icons.emergency,
+      trailing: GestureDetector(
+        onTap: () async {
+          await ref.read(syncControllerProvider.notifier).syncNow();
+          ref.invalidate(historyControllerProvider);
+          if (context.mounted) {
+            final s = ref.read(syncControllerProvider);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  s.isConnected
+                      ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
+                      : 'No internet connection',
+                ),
+                backgroundColor: s.isConnected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+        },
+        child: const ConnectivityIndicator(),
       ),
     );
   }
@@ -294,14 +242,10 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: AppDecorations.card(
+        context,
         color: bgColor ?? Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: bgColor != null
-              ? color
-              : Theme.of(context).colorScheme.outlineVariant,
-        ),
+        borderColor: bgColor != null ? color.withValues(alpha: 0.3) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,129 +298,153 @@ class _SyncRecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Consumer(builder: (context, ref, _) => _buildCard(context, ref));
+  }
+
+  Widget _buildCard(BuildContext context, WidgetRef ref) {
     final priorityColor = _getPriorityColor(record.priority);
     final isSynced = record.syncStatus == SyncStatus.synced;
     final isFailed = record.syncStatus == SyncStatus.failed;
     final statusLabel = record.syncStatus.name.toUpperCase();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(left: BorderSide(color: priorityColor, width: 4)),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: priorityColor.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isSynced
-                  ? Icons.cloud_done
-                  : isFailed
-                  ? Icons.cloud_off
-                  : Icons.cloud_sync,
-              color: isSynced
-                  ? Theme.of(context).colorScheme.primary
-                  : isFailed
-                  ? Theme.of(context).colorScheme.error
-                  : AppColors.failed,
-              size: 24,
-            ),
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        onTap: () => context.push('/patient/${record.id}'),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(left: BorderSide(color: priorityColor, width: 4)),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            boxShadow: AppDecorations.barShadow(context),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  record.patient.name,
-                  style: AppTypography.textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${_getPriorityLabel(record.priority)} \u2022 ${record.chiefComplaint}',
-                  style: AppTypography.textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _formatTime(record.createdAt),
-                  style: AppTypography.textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: isSynced
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
-                      : isFailed
-                      ? Theme.of(context).colorScheme.error.withOpacity(0.15)
-                      : AppColors.failed.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(9999),
-                  border: Border.all(
-                    color: isSynced
-                        ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
-                        : isFailed
-                        ? Theme.of(context).colorScheme.error.withOpacity(0.2)
-                        : AppColors.failed.withOpacity(0.2),
-                  ),
+                  color: priorityColor.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
                 ),
-                child: Text(
-                  statusLabel,
-                  style: AppTypography.textTheme.labelMedium?.copyWith(
-                    color: isSynced
-                        ? Theme.of(context).colorScheme.primary
-                        : isFailed
-                        ? Theme.of(context).colorScheme.error
-                        : AppColors.failed,
-                  ),
+                child: Icon(
+                  isSynced
+                      ? Icons.cloud_done
+                      : isFailed
+                      ? Icons.cloud_off
+                      : Icons.cloud_sync,
+                  color: isSynced
+                      ? Theme.of(context).colorScheme.primary
+                      : isFailed
+                      ? Theme.of(context).colorScheme.error
+                      : AppColors.failed,
+                  size: 24,
                 ),
               ),
-              const SizedBox(height: 8),
-              IconButton(
-                icon: Icon(
-                  isFailed ? Icons.replay : Icons.visibility,
-                  size: 20,
-                  color: isFailed
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      record.patient.name,
+                      style: AppTypography.textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${_getPriorityLabel(record.priority)} \u2022 ${record.chiefComplaint}',
+                      style: AppTypography.textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatTime(record.createdAt),
+                      style: AppTypography.textTheme.labelMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                    ),
+                  ],
                 ),
-                onPressed: isFailed
-                    ? () {
-                        // TODO: Implement retry sync
-                      }
-                    : () {
-                        // TODO: Navigate to patient details
-                      },
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSynced
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.15)
+                          : isFailed
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.error.withValues(alpha: 0.15)
+                          : AppColors.failed.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(9999),
+                      border: Border.all(
+                        color: isSynced
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.2)
+                            : isFailed
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.error.withValues(alpha: 0.2)
+                            : AppColors.failed.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Text(
+                      statusLabel,
+                      style: AppTypography.textTheme.labelMedium?.copyWith(
+                        color: isSynced
+                            ? Theme.of(context).colorScheme.primary
+                            : isFailed
+                            ? Theme.of(context).colorScheme.error
+                            : AppColors.failed,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  IconButton(
+                    icon: Icon(
+                      isFailed ? Icons.replay : Icons.visibility,
+                      size: 20,
+                      color: isFailed
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: isFailed
+                        ? () async {
+                            await ref
+                                .read(syncControllerProvider.notifier)
+                                .syncRecord(record.id);
+                            ref.invalidate(historyControllerProvider);
+                          }
+                        : () => context.push('/patient/${record.id}'),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

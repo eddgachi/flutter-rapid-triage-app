@@ -1,4 +1,5 @@
 import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
+import 'package:flutter_rapid_triage/core/utils/sentinel.dart';
 import 'package:uuid/uuid.dart';
 
 import 'location.dart';
@@ -71,28 +72,29 @@ class TriageRecord {
     String? id,
     Patient? patient,
     String? chiefComplaint,
-    String? clinicalNotes,
+    Object? clinicalNotes = unset,
     int? priority,
     String? status,
     TriageLocation? location,
     String? nfcTag,
     DateTime? createdAt,
     SyncStatus? syncStatus,
-    String? syncError,
-    Object? clearSyncError,
+    Object? syncError = unset,
   }) {
     return TriageRecord(
       id: id ?? this.id,
       patient: patient ?? this.patient,
       chiefComplaint: chiefComplaint ?? this.chiefComplaint,
-      clinicalNotes: clinicalNotes ?? this.clinicalNotes,
+      clinicalNotes: clinicalNotes == unset
+          ? this.clinicalNotes
+          : clinicalNotes as String?,
       priority: priority ?? this.priority,
       status: status ?? this.status,
       location: location ?? this.location,
       nfcTag: nfcTag ?? this.nfcTag,
       createdAt: createdAt ?? this.createdAt,
       syncStatus: syncStatus ?? this.syncStatus,
-      syncError: syncError ?? this.syncError,
+      syncError: syncError == unset ? this.syncError : syncError as String?,
     );
   }
 }

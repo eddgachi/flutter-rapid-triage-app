@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart' as ph;
 
 class PermissionService {
   // Check and request location permission
@@ -81,6 +82,6 @@ class PermissionService {
 
   // Open app settings
   Future<void> openAppSettings() async {
-    await openAppSettings();
+    await ph.openAppSettings();
   }
 }

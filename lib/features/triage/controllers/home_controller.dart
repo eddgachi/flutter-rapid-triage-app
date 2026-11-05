@@ -11,6 +11,7 @@ class HomeState {
     this.failedPatients = 0,
     this.criticalPatients = 0,
     this.recentPatients = const [],
+    this.allPatients = const [],
   });
 
   final bool loading;
@@ -20,6 +21,7 @@ class HomeState {
   final int failedPatients;
   final int criticalPatients;
   final List<TriageRecord> recentPatients;
+  final List<TriageRecord> allPatients;
 
   HomeState copyWith({
     bool? loading,
@@ -29,6 +31,7 @@ class HomeState {
     int? failedPatients,
     int? criticalPatients,
     List<TriageRecord>? recentPatients,
+    List<TriageRecord>? allPatients,
   }) {
     return HomeState(
       loading: loading ?? this.loading,
@@ -38,6 +41,7 @@ class HomeState {
       failedPatients: failedPatients ?? this.failedPatients,
       criticalPatients: criticalPatients ?? this.criticalPatients,
       recentPatients: recentPatients ?? this.recentPatients,
+      allPatients: allPatients ?? this.allPatients,
     );
   }
 }
@@ -61,6 +65,7 @@ class HomeController extends Notifier<HomeState> {
       failedPatients: repo.getFailedSync().length,
       criticalPatients: repo.criticalCount(),
       recentPatients: patients.take(5).toList(),
+      allPatients: patients,
     );
   }
 

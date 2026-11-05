@@ -1,5 +1,6 @@
 import 'package:flutter_rapid_triage/app/app_providers.dart';
 import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
+import 'package:flutter_rapid_triage/core/utils/sentinel.dart';
 import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
 import 'package:flutter_rapid_triage/features/triage/repositories/triage_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,7 +28,7 @@ class HistoryState {
     List<TriageRecord>? filteredRecords,
     HistoryFilterType? filterType,
     String? searchQuery,
-    String? error,
+    Object? error = unset,
   }) {
     return HistoryState(
       loading: loading ?? this.loading,
@@ -35,7 +36,7 @@ class HistoryState {
       filteredRecords: filteredRecords ?? this.filteredRecords,
       filterType: filterType ?? this.filterType,
       searchQuery: searchQuery ?? this.searchQuery,
-      error: error ?? this.error,
+      error: error == unset ? this.error : error as String?,
     );
   }
 }
@@ -54,7 +55,9 @@ enum HistoryFilterType {
 class HistoryController extends Notifier<HistoryState> {
   @override
   HistoryState build() {
-    load();
+    // Deferred: load() reads `state` (via copyWith), which isn't valid
+    // until build() has returned and the provider has initialized.
+    Future.microtask(load);
     return const HistoryState();
   }
 

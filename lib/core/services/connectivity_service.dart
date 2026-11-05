@@ -9,6 +9,12 @@ class ConnectivityService {
     return !result.contains(ConnectivityResult.none);
   }
 
+  Future<bool> isOnWifi() async {
+    final result = await _connectivity.checkConnectivity();
+
+    return result.contains(ConnectivityResult.wifi);
+  }
+
   Stream<List<ConnectivityResult>> get changes =>
       _connectivity.onConnectivityChanged;
 }

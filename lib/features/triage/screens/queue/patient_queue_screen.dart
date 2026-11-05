@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
 import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
+import 'package:flutter_rapid_triage/core/theme/app_decorations.dart';
+import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
 import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
+import 'package:flutter_rapid_triage/core/widgets/empty_state_widget.dart';
+import 'package:flutter_rapid_triage/core/widgets/loading_indicator.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/queue_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/sync_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
 import 'package:flutter_rapid_triage/features/triage/widgets/shared/bottom_nav_bar.dart';
 import 'package:flutter_rapid_triage/features/triage/widgets/shared/connectivity_indicator.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/custom_app_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -57,52 +62,18 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
                   children: [
                     _buildSearchBar(),
                     const SizedBox(height: 16),
-                    _buildFilterChips(),
+                    _buildFilterChips(queueState),
                     const SizedBox(height: 16),
                     _buildQueueHeader(pendingCount),
                     const SizedBox(height: 8),
                     if (queueState.loading)
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(32.0),
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
+                      const LoadingIndicator()
                     else if (records.isEmpty)
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32.0),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.people_outline,
-                                size: 64,
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No patients in queue',
-                                style: AppTypography.textTheme.headlineSmall
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Patient records will appear here once they are created.',
-                                style: AppTypography.textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
+                      const EmptyStateWidget(
+                        icon: Icons.people_outline,
+                        title: 'No patients in queue',
+                        message:
+                            'Patient records will appear here once they are created.',
                       )
                     else
                       ...records.map(
@@ -125,10 +96,11 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
           onPressed: () => context.push('/intake'),
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(16)),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
           ),
-          child: const Icon(Icons.add, size: 32),
+          child: const Icon(Icons.add, size: 28),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
@@ -137,31 +109,12 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
 
   Widget _buildAppBar(BuildContext context) {
     final syncState = ref.watch(syncControllerProvider);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      height: 56,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
+    return CustomAppBar(
+      title: 'RapidTriage',
+      leadingIcon: Icons.emergency,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.emergency, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
-          Text(
-            'RapidTriage',
-            style: AppTypography.textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Spacer(),
           if (!syncState.isConnected)
             Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -203,7 +156,12 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
       height: 48,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.full),
+        border: Border.all(
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
       ),
       child: TextField(
         controller: _searchController,
@@ -232,14 +190,17 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
     );
   }
 
-  Widget _buildFilterChips() {
+  Widget _buildFilterChips(QueueState queueState) {
+    final isAll =
+        queueState.priority == null && queueState.statusFilter == null;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
           _FilterChip(
             label: 'All',
-            isActive: true,
+            isActive: isAll,
             onTap: () {
               ref.read(queueControllerProvider.notifier).load();
             },
@@ -247,7 +208,7 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
           const SizedBox(width: 8),
           _FilterChip(
             label: 'Critical (P1)',
-            isActive: false,
+            isActive: queueState.priority == 1,
             onTap: () {
               ref.read(queueControllerProvider.notifier).filterPriority(1);
             },
@@ -255,7 +216,7 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
           const SizedBox(width: 8),
           _FilterChip(
             label: 'Urgent (P2)',
-            isActive: false,
+            isActive: queueState.priority == 2,
             onTap: () {
               ref.read(queueControllerProvider.notifier).filterPriority(2);
             },
@@ -263,7 +224,7 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
           const SizedBox(width: 8),
           _FilterChip(
             label: 'Delayed (P3)',
-            isActive: false,
+            isActive: queueState.priority == 3,
             onTap: () {
               ref.read(queueControllerProvider.notifier).filterPriority(3);
             },
@@ -271,7 +232,7 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
           const SizedBox(width: 8),
           _FilterChip(
             label: 'Pending Sync',
-            isActive: false,
+            isActive: queueState.statusFilter == 'pending',
             onTap: () {
               ref.read(queueControllerProvider.notifier).loadPending();
             },
@@ -279,7 +240,7 @@ class _PatientQueueScreenState extends ConsumerState<PatientQueueScreen> {
           const SizedBox(width: 8),
           _FilterChip(
             label: 'Synced',
-            isActive: false,
+            isActive: queueState.statusFilter == 'synced',
             onTap: () {
               ref.read(queueControllerProvider.notifier).loadSynced();
             },
@@ -363,120 +324,127 @@ class _QueueCard extends StatelessWidget {
     final priorityColor = _getPriorityColor(record.priority, context);
     final isSynced = record.syncStatus == SyncStatus.synced;
 
-    return GestureDetector(
-      onTap: () => context.go('/patient/${record.id}'),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLowest,
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerLowest,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        onTap: () => context.go('/patient/${record.id}'),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Container(
+          decoration: AppDecorations.flatCard(
+            context,
+            color: Theme.of(context).colorScheme.surfaceContainerLowest,
           ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 8,
-              decoration: BoxDecoration(
-                color: priorityColor,
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(12),
+          child: Row(
+            children: [
+              Container(
+                width: 8,
+                decoration: BoxDecoration(
+                  color: priorityColor,
+                  borderRadius: BorderRadius.horizontal(
+                    left: Radius.circular(AppRadius.lg),
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          record.patient.name,
-                          style: AppTypography.textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: priorityColor,
-                            borderRadius: BorderRadius.circular(9999),
-                          ),
-                          child: Text(
-                            _getPriorityLabel(record.priority),
-                            style: AppTypography.textTheme.labelMedium
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            record.patient.name,
+                            style: AppTypography.textTheme.titleMedium
                                 ?.copyWith(
-                                  color: record.priority == 3
-                                      ? Colors.black
-                                      : Colors.white,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.schedule,
-                              size: 16,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _formatTime(record.createdAt),
+                            decoration: BoxDecoration(
+                              color: priorityColor,
+                              borderRadius: BorderRadius.circular(9999),
+                            ),
+                            child: Text(
+                              _getPriorityLabel(record.priority),
                               style: AppTypography.textTheme.labelMedium
                                   ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                                    color: record.priority == 3
+                                        ? Colors.black
+                                        : Colors.white,
                                   ),
                             ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Icon(
-                              isSynced ? Icons.check_circle : Icons.schedule,
-                              size: 16,
-                              color: isSynced
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              isSynced ? 'Synced' : 'Pending',
-                              style: AppTypography.textTheme.labelMedium
-                                  ?.copyWith(
-                                    color: isSynced
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(
-                                            context,
-                                          ).colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.schedule,
+                                size: 16,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _formatTime(record.createdAt),
+                                style: AppTypography.textTheme.labelMedium
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Icon(
+                                isSynced ? Icons.check_circle : Icons.schedule,
+                                size: 16,
+                                color: isSynced
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                isSynced ? 'Synced' : 'Pending',
+                                style: AppTypography.textTheme.labelMedium
+                                    ?.copyWith(
+                                      color: isSynced
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

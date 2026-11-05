@@ -1,4 +1,7 @@
+import 'package:flutter_rapid_triage/core/services/demo_data_seeder.dart';
 import 'package:flutter_rapid_triage/core/services/permission_service.dart';
+import 'package:flutter_rapid_triage/features/auth/repositories/auth_repository.dart';
+import 'package:flutter_rapid_triage/features/triage/repositories/triage_repository.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../core/services/api_service.dart';
@@ -12,6 +15,7 @@ class AppInitializer {
   static late final ApiService apiService;
   static late final ConnectivityService connectivityService;
   static late final FakeAuthService authService;
+  static late final AuthRepository authRepository;
   static late final LocationService locationService;
   static late final PermissionService permissionService;
 
@@ -26,8 +30,19 @@ class AppInitializer {
     await hiveService.initialize();
     await apiService.initialize();
 
+    authRepository = AuthRepository(
+      hiveService: hiveService,
+      authService: authService,
+    );
+
     // Check permissions (non-blocking)
     await _checkPermissions();
+
+    // Seed demo data on first run so the app isn't empty out of the box.
+    await DemoDataSeeder(
+      repository: TriageRepository(hiveService: hiveService),
+      locationService: locationService,
+    ).seedIfEmpty();
   }
 
   static Future<void> _checkPermissions() async {

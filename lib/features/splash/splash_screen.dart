@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> {
               child: Icon(
                 Icons.emergency,
                 size: 300,
-                color: AppColors.primary.withOpacity(0.05),
+                color: AppColors.primary.withValues(alpha: 0.05),
               ),
             ),
             // Main content
@@ -163,7 +163,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: CircularProgressIndicator(
                       strokeWidth: 3,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.primary.withOpacity(0.3),
+                        AppColors.primary.withValues(alpha: 0.3),
                       ),
                       backgroundColor: AppColors.surfaceContainerHighest,
                     ),
@@ -202,11 +202,12 @@ class _AnimatedLogo extends StatelessWidget {
               height: 96,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.2),
-                    blurRadius: 15,
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -227,7 +228,7 @@ class _MedicalGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.primary.withOpacity(0.05)
+      ..color = AppColors.primary.withValues(alpha: 0.05)
       ..strokeWidth = 1;
 
     const spacing = 32.0;

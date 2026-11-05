@@ -1,6 +1,7 @@
 import 'package:flutter_rapid_triage/app/app_providers.dart';
 import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
 import 'package:flutter_rapid_triage/core/services/connectivity_service.dart';
+import 'package:flutter_rapid_triage/core/utils/sentinel.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/sync_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
 import 'package:flutter_rapid_triage/features/triage/repositories/triage_repository.dart';
@@ -21,14 +22,14 @@ class PatientState {
 
   PatientState copyWith({
     bool? loading,
-    TriageRecord? patient,
-    String? error,
+    Object? patient = unset,
+    Object? error = unset,
     bool? isDeleting,
   }) {
     return PatientState(
       loading: loading ?? this.loading,
-      patient: patient ?? this.patient,
-      error: error ?? this.error,
+      patient: patient == unset ? this.patient : patient as TriageRecord?,
+      error: error == unset ? this.error : error as String?,
       isDeleting: isDeleting ?? this.isDeleting,
     );
   }

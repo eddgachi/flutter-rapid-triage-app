@@ -2,8 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
 import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
+import 'package:flutter_rapid_triage/core/theme/app_decorations.dart';
 import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
+import 'package:flutter_rapid_triage/core/theme/app_spacing.dart';
 import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
+import 'package:flutter_rapid_triage/core/widgets/empty_state_widget.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/history_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/home_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/patient_controller.dart';
@@ -12,10 +15,10 @@ import 'package:flutter_rapid_triage/features/triage/controllers/sync_controller
 import 'package:flutter_rapid_triage/features/triage/models/patient.dart'
     as patient_model;
 import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
-import 'package:flutter_rapid_triage/features/triage/widgets/shared/connectivity_indicator.dart';
-import 'package:flutter_rapid_triage/features/triage/widgets/shared/priority_badge.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/incident_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PatientDetailsScreen extends ConsumerStatefulWidget {
   final String patientId;
@@ -34,6 +37,14 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(patientControllerProvider.notifier).load(widget.patientId);
     });
+  }
+
+  void _goBack() {
+    // Invalidate providers to refresh data when returning
+    ref.invalidate(homeControllerProvider);
+    ref.invalidate(queueControllerProvider);
+    ref.invalidate(historyControllerProvider);
+    context.go('/queue');
   }
 
   @override
@@ -61,36 +72,13 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.person_off,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Patient not found',
-                  style: AppTypography.textTheme.headlineSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                const EmptyStateWidget(
+                  icon: Icons.person_off,
+                  title: 'Patient not found',
+                  message: 'The patient record could not be loaded.',
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'The patient record could not be loaded.',
-                  style: AppTypography.textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    // Invalidate providers to refresh data when returning
-                    ref.invalidate(homeControllerProvider);
-                    ref.invalidate(queueControllerProvider);
-                    ref.invalidate(historyControllerProvider);
-                    context.go('/queue'); // Fixed: Use go() instead of pop()
-                  },
-                  child: const Text('Go Back'),
-                ),
+                FilledButton(onPressed: _goBack, child: const Text('Go Back')),
               ],
             ),
           ),
@@ -98,38 +86,155 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
       );
     }
 
+    final priorityColor = _getPriorityColor(context, patient.priority);
+    final heroFg = _heroForeground(patient.priority);
+
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildAppBar(context, patient, syncState),
-            if (!syncState.isConnected) _buildOfflineBar(context),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  140,
-                ), // Increased bottom padding
+      backgroundColor: priorityColor,
+      body: Column(
+        children: [
+          _buildHero(context, patient, priorityColor, heroFg),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSyncStatusBanner(patient),
-                    const SizedBox(height: 16),
-                    _buildOverviewBento(patient),
-                    const SizedBox(height: 24),
-                    _buildLocationSection(patient),
-                    const SizedBox(height: 24),
-                    _buildTimeline(patient),
-                    const SizedBox(height: 24),
-                    _buildClinicalNotes(patient),
+                    if (!syncState.isConnected) _buildOfflineBar(context),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 140),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildQuickStats(context, patient),
+                            const SizedBox(height: 20),
+                            _buildSyncStatusBanner(patient),
+                            const SizedBox(height: 20),
+                            _buildLocationSection(patient),
+                            const SizedBox(height: 24),
+                            _buildClinicalSection(patient),
+                            const SizedBox(height: 24),
+                            _buildTimeline(patient),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
-            _buildStickyFooter(patient, patientState),
+          ),
+        ],
+      ),
+      bottomSheet: _buildStickyFooter(patient, patientState),
+    );
+  }
+
+  // ==================== HERO ====================
+
+  Widget _buildHero(
+    BuildContext context,
+    TriageRecord patient,
+    Color priorityColor,
+    Color fg,
+  ) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            priorityColor,
+            Color.alphaBlend(
+              Colors.black.withValues(alpha: 0.18),
+              priorityColor,
+            ),
           ],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _HeroIconButton(
+                    icon: Icons.arrow_back,
+                    foreground: fg,
+                    onTap: _goBack,
+                  ),
+                  _HeroIconButton(
+                    icon: Icons.edit,
+                    foreground: fg,
+                    onTap: () => _showEditDialog(patient),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      patient.patient.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.textTheme.headlineMedium?.copyWith(
+                        color: fg,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Incident #${patient.id.length > 8 ? patient.id.substring(0, 8).toUpperCase() : patient.id.toUpperCase()}',
+                      style: AppTypography.textTheme.labelMedium?.copyWith(
+                        color: fg.withValues(alpha: 0.75),
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _HeroChip(
+                          icon: Icons.priority_high,
+                          label: _getPriorityLabel(patient.priority),
+                          foreground: fg,
+                        ),
+                        _HeroChip(
+                          icon: Icons.cake_outlined,
+                          label:
+                              '${patient.patient.age ?? 'N/A'} • ${patient.patient.gender ?? 'Unknown'}',
+                          foreground: fg,
+                        ),
+                        _HeroChip(
+                          icon: Icons.schedule,
+                          label: _formatTime(patient.createdAt),
+                          foreground: fg,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -161,101 +266,56 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     );
   }
 
-  Widget _buildAppBar(
-    BuildContext context,
-    TriageRecord patient,
-    SyncState syncState,
-  ) {
-    final priorityColor = _getPriorityColor(patient.priority);
+  // ==================== QUICK STATS ====================
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      height: 64,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
+  Widget _buildQuickStats(BuildContext context, TriageRecord patient) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Expanded(
+          child: _StatPill(
+            icon: Icons.flag_outlined,
+            label: 'Status',
+            value: patient.status.toUpperCase(),
+            color: scheme.primary,
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Fixed back button - using context.pop() from go_router
-          IconButton(
-            icon: Icon(
-              Icons.arrow_back,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            onPressed: () {
-              // Invalidate providers to refresh data when returning
-              ref.invalidate(homeControllerProvider);
-              ref.invalidate(queueControllerProvider);
-              ref.invalidate(historyControllerProvider);
-              // Use go_router's pop method
-              context.go('/queue');
-            },
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _StatPill(
+            icon: Icons.event_note_outlined,
+            label: 'Logged',
+            value: _formatDate(patient.createdAt),
+            color: scheme.secondary,
           ),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  patient.patient.name,
-                  style: AppTypography.textTheme.titleLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  'ID: ${patient.id.length > 8 ? patient.id.substring(0, 8) : patient.id}',
-                  style: AppTypography.textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          PriorityBadge(
-            label: _getPriorityLabel(patient.priority),
-            color: priorityColor,
-          ),
-          const SizedBox(width: 8),
-          // Connectivity indicator
-          const ConnectivityIndicator(),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
+  // ==================== SYNC STATUS ====================
+
   Widget _buildSyncStatusBanner(TriageRecord patient) {
+    final scheme = Theme.of(context).colorScheme;
+
     if (patient.syncStatus == SyncStatus.synced) {
       return Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          border: Border.all(color: Theme.of(context).colorScheme.primary),
-          borderRadius: BorderRadius.circular(12),
+        decoration: AppDecorations.card(
+          context,
+          color: scheme.primaryContainer,
+          borderColor: scheme.primary.withValues(alpha: 0.4),
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.cloud_done,
-              color: Theme.of(context).colorScheme.primary,
-              size: 24,
-            ),
+            Icon(Icons.cloud_done, color: scheme.primary, size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Synced to Cloud',
                 style: AppTypography.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: scheme.onPrimaryContainer,
                 ),
               ),
             ),
@@ -270,18 +330,14 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isFailed
-            ? Theme.of(context).colorScheme.errorContainer
-            : Theme.of(context).colorScheme.surfaceContainerLow,
-        border: Border.all(
-          color: isFailed
-              ? Theme.of(context).colorScheme.error
-              : isSyncing
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outlineVariant,
-        ),
-        borderRadius: BorderRadius.circular(12),
+      decoration: AppDecorations.card(
+        context,
+        color: isFailed ? scheme.errorContainer : scheme.surfaceContainerLow,
+        borderColor: isFailed
+            ? scheme.error.withValues(alpha: 0.4)
+            : isSyncing
+            ? scheme.primary.withValues(alpha: 0.4)
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,10 +351,10 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                     ? Icons.sync
                     : Icons.cloud_off,
                 color: isFailed
-                    ? Theme.of(context).colorScheme.error
+                    ? scheme.error
                     : isSyncing
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.error,
+                    ? scheme.primary
+                    : scheme.onSurfaceVariant,
                 size: 24,
               ),
               const SizedBox(width: 12),
@@ -312,8 +368,8 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                   style: AppTypography.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: isFailed
-                        ? Theme.of(context).colorScheme.error
-                        : Theme.of(context).colorScheme.onSurface,
+                        ? scheme.onErrorContainer
+                        : scheme.onSurface,
                   ),
                 ),
               ),
@@ -334,7 +390,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                 child: Text(
                   isSyncing ? '...' : 'RETRY',
                   style: AppTypography.textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: scheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -349,22 +405,18 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                color: scheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                  Icon(Icons.info_outline, size: 14, color: scheme.error),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       patient.syncError!,
                       style: AppTypography.textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
+                        color: scheme.error,
                       ),
                     ),
                   ),
@@ -377,68 +429,27 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     );
   }
 
-  Widget _buildOverviewBento(TriageRecord patient) {
-    final priorityColor = _getPriorityColor(patient.priority);
-
-    return Row(
-      children: [
-        Expanded(
-          child: _DetailCard(
-            title: 'Priority',
-            value: _getPriorityLabel(patient.priority),
-            subtitle: 'Triage Level P${patient.priority}',
-            color: priorityColor,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _DetailCard(
-            title: 'Age & Gender',
-            value: '${patient.patient.age ?? 'N/A'} yrs',
-            subtitle: patient.patient.gender ?? 'Not specified',
-            color: Theme.of(context).colorScheme.secondary,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _DetailCard(
-            title: 'Status',
-            value: patient.status.toUpperCase(),
-            subtitle: _formatDate(patient.createdAt),
-            color: Theme.of(context).colorScheme.primary,
-            icon: Icons.access_time,
-          ),
-        ),
-      ],
-    );
-  }
+  // ==================== LOCATION ====================
 
   Widget _buildLocationSection(TriageRecord patient) {
+    final scheme = Theme.of(context).colorScheme;
+
     if (patient.location == null) {
       return Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Theme.of(
-              context,
-            ).colorScheme.outlineVariant.withOpacity(0.3),
-          ),
+        decoration: AppDecorations.card(
+          context,
+          color: scheme.surfaceContainerLow,
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.location_off,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              size: 20,
-            ),
+            Icon(Icons.location_off, color: scheme.onSurfaceVariant, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'No location data captured',
                 style: AppTypography.textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -452,136 +463,189 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
         'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}';
 
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-        ),
-      ),
+      padding: const EdgeInsets.all(12),
+      decoration: AppDecorations.card(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.location_on,
-                color: Theme.of(context).colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Location Captured',
-                style: AppTypography.textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              children: [
+                Icon(Icons.location_on, color: scheme.primary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Incident Location',
+                    style: AppTypography.textTheme.titleMedium?.copyWith(
+                      color: scheme.onSurface,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                IconButton(
+                  icon: Icon(Icons.open_in_new, color: scheme.primary),
+                  onPressed: () async {
+                    final uri = Uri.parse(googleMapsUrl);
+                    if (!await launchUrl(
+                      uri,
+                      mode: LaunchMode.externalApplication,
+                    )) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Could not open Google Maps'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  tooltip: 'Open in Google Maps',
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Latitude: ${location.latitude.toStringAsFixed(6)}',
-                      style: AppTypography.textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Longitude: ${location.longitude.toStringAsFixed(6)}',
-                      style: AppTypography.textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    if (location.address != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        location.address!,
-                        style: AppTypography.textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
+          IncidentMapCard(
+            incidents: [patient],
+            focusRecordId: patient.id,
+            height: 160,
+            showCurrentLocation: false,
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              '${location.latitude.toStringAsFixed(5)}, ${location.longitude.toStringAsFixed(5)}'
+              '${location.address != null ? ' • ${location.address}' : ''}',
+              style: AppTypography.textTheme.labelMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.open_in_new,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                onPressed: () {
-                  // Open in Google Maps
-                  // You can use url_launcher package here
-                  // launchUrl(Uri.parse(googleMapsUrl));
-                },
-                tooltip: 'Open in Google Maps',
-              ),
-            ],
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
     );
   }
 
+  // ==================== CLINICAL ====================
+
+  Widget _buildClinicalSection(TriageRecord patient) {
+    final scheme = Theme.of(context).colorScheme;
+    final priorityColor = _getPriorityColor(context, patient.priority);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.medical_information_outlined,
+              color: scheme.onSurface,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Clinical Summary',
+              style: AppTypography.textTheme.titleLarge?.copyWith(
+                color: scheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: priorityColor.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border(left: BorderSide(color: priorityColor, width: 4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'CHIEF COMPLAINT',
+                style: AppTypography.textTheme.labelMedium?.copyWith(
+                  color: priorityColor,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                patient.chiefComplaint,
+                style: AppTypography.textTheme.bodyLarge?.copyWith(
+                  color: scheme.onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: AppDecorations.flatCard(
+            context,
+            color: scheme.surfaceContainerLow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'CLINICAL NOTES',
+                style: AppTypography.textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                patient.clinicalNotes ?? 'No clinical notes recorded.',
+                style: AppTypography.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==================== TIMELINE ====================
+
   Widget _buildTimeline(TriageRecord patient) {
+    final scheme = Theme.of(context).colorScheme;
     final events = [
       TimelineEvent(
         title: 'Patient Created',
         description: 'Initial triage record created',
         time: _formatTime(patient.createdAt),
-        dotColor: Theme.of(context).colorScheme.primary,
-        cardColor: Theme.of(context).colorScheme.surfaceContainerLow,
+        dotColor: scheme.primary,
       ),
-      if (patient.chiefComplaint.isNotEmpty)
-        TimelineEvent(
-          title: 'Chief Complaint Recorded',
-          description: patient.chiefComplaint,
-          time: _formatTime(patient.createdAt),
-          dotColor: Theme.of(context).colorScheme.secondary,
-          cardColor: Theme.of(context).colorScheme.surfaceContainerLow,
-        ),
-      if (patient.clinicalNotes != null && patient.clinicalNotes!.isNotEmpty)
-        TimelineEvent(
-          title: 'Clinical Notes Added',
-          description: patient.clinicalNotes!,
-          time: _formatTime(patient.createdAt),
-          dotColor: Theme.of(context).colorScheme.tertiary,
-          cardColor: Theme.of(context).colorScheme.surfaceContainerLow,
-        ),
       if (patient.location != null)
         TimelineEvent(
           title: 'Location Captured',
           description:
               'GPS coordinates recorded at ${patient.location!.latitude.toStringAsFixed(4)}, ${patient.location!.longitude.toStringAsFixed(4)}',
           time: _formatTime(patient.createdAt),
-          dotColor: Theme.of(context).colorScheme.primary,
-          cardColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          dotColor: scheme.secondary,
         ),
       TimelineEvent(
         title: 'Sync Status',
         description: _getSyncDescription(patient),
         time: _formatTime(patient.createdAt),
         dotColor: patient.syncStatus == SyncStatus.synced
-            ? Theme.of(context).colorScheme.primary
+            ? scheme.primary
             : patient.syncStatus == SyncStatus.failed
-            ? Theme.of(context).colorScheme.error
-            : Theme.of(context).colorScheme.onSurfaceVariant,
-        cardColor: patient.syncStatus == SyncStatus.synced
-            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1)
-            : patient.syncStatus == SyncStatus.failed
-            ? Theme.of(context).colorScheme.errorContainer.withOpacity(0.1)
-            : Theme.of(
-                context,
-              ).colorScheme.surfaceContainerLow.withOpacity(0.1),
+            ? scheme.error
+            : scheme.onSurfaceVariant,
       ),
     ];
 
@@ -590,99 +654,83 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
       children: [
         Row(
           children: [
-            Icon(
-              Icons.history,
-              color: Theme.of(context).colorScheme.onSurface,
-              size: 20,
-            ),
+            Icon(Icons.history, color: scheme.onSurface, size: 20),
             const SizedBox(width: 8),
             Text(
-              'Triage Timeline',
+              'Timeline',
               style: AppTypography.textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
+                color: scheme.onSurface,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        ...events.map(
-          (e) => Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 16),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    children: [
-                      Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: e.dotColor,
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.surface,
-                            width: 4,
-                          ),
-                        ),
+        const SizedBox(height: 12),
+        ...events.asMap().entries.map((entry) {
+          final isLast = entry.key == events.length - 1;
+          final e = entry.value;
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  children: [
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: e.dotColor,
                       ),
+                    ),
+                    if (!isLast)
                       Expanded(
                         child: Container(
                           width: 2,
-                          color: Theme.of(context).colorScheme.outlineVariant,
+                          color: scheme.outlineVariant,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: e.cardColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                e.title,
-                                style: AppTypography.textTheme.labelMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: e.dotColor,
-                                    ),
-                              ),
-                              Text(
-                                e.time,
-                                style: AppTypography.textTheme.labelMedium
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            e.description,
-                            style: AppTypography.textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface,
+                  ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              e.title,
+                              style: AppTypography.textTheme.bodyLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: scheme.onSurface,
+                                  ),
                             ),
+                            Text(
+                              e.time,
+                              style: AppTypography.textTheme.labelMedium
+                                  ?.copyWith(color: scheme.outline),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          e.description,
+                          style: AppTypography.textTheme.bodyMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
-        ),
+          );
+        }),
       ],
     );
   }
@@ -704,80 +752,10 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     }
   }
 
-  Widget _buildClinicalNotes(TriageRecord patient) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.notes,
-              color: Theme.of(context).colorScheme.onSurface,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Clinical Notes',
-              style: AppTypography.textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                patient.clinicalNotes ?? 'No clinical notes recorded.',
-                style: AppTypography.textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Divider(
-                height: 1,
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Chief Complaint',
-                    style: AppTypography.textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      patient.chiefComplaint,
-                      style: AppTypography.textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.right,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  // ==================== FOOTER ====================
 
   Widget _buildStickyFooter(TriageRecord patient, PatientState patientState) {
+    final scheme = Theme.of(context).colorScheme;
     final isSynced = patient.syncStatus == SyncStatus.synced;
     final isFailed = patient.syncStatus == SyncStatus.failed;
     final isSyncing = patient.syncStatus == SyncStatus.syncing;
@@ -785,48 +763,17 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        color: scheme.surface,
+        boxShadow: AppDecorations.barShadow(context),
       ),
       child: SafeArea(
         top: false,
         child: Row(
           children: [
-            // Edit button - with improved styling
             Expanded(
+              flex: 3,
               child: SizedBox(
-                height: 50,
-                child: OutlinedButton.icon(
-                  onPressed: patientState.isDeleting || patientState.loading
-                      ? null
-                      : () => _showEditDialog(patient),
-                  icon: const Icon(Icons.edit, size: 20),
-                  label: const Text(''),
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                    ),
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                    foregroundColor: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-
-            // Sync button - with improved styling and feedback
-            Expanded(
-              flex: 2,
-              child: SizedBox(
-                height: 50,
+                height: 52,
                 child: FilledButton.icon(
                   onPressed: (isSynced || patientState.loading || isSyncing)
                       ? null
@@ -836,7 +783,6 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                           );
                           final success = await controller.syncRecord();
 
-                          // Invalidate providers to refresh
                           ref.invalidate(homeControllerProvider);
                           ref.invalidate(queueControllerProvider);
                           ref.invalidate(historyControllerProvider);
@@ -853,8 +799,8 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                                       : 'Sync failed: ${updatedPatient?.syncError ?? "Unknown error"}',
                                 ),
                                 backgroundColor: success
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.error,
+                                    ? scheme.primary
+                                    : scheme.error,
                                 duration: const Duration(seconds: 3),
                               ),
                             );
@@ -863,138 +809,130 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                         },
                   icon: patientState.loading || isSyncing
                       ? const SizedBox(
-                          width: 20,
-                          height: 20,
+                          width: 18,
+                          height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Colors.white,
                           ),
                         )
                       : Icon(
-                          isFailed ? Icons.replay : Icons.cloud_sync,
+                          isSynced
+                              ? Icons.check_circle
+                              : isFailed
+                              ? Icons.replay
+                              : Icons.cloud_sync,
                           size: 20,
                         ),
                   label: Text(
                     patientState.loading || isSyncing
                         ? 'Syncing...'
                         : isSynced
-                        ? 'Synced ✓'
+                        ? 'Synced'
                         : isFailed
-                        ? 'Retry'
-                        : 'Sync',
+                        ? 'Retry Sync'
+                        : 'Sync Now',
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: isSynced
-                        ? Theme.of(context).colorScheme.primaryContainer
+                        ? scheme.primaryContainer
                         : isFailed
-                        ? Theme.of(context).colorScheme.error
-                        : Theme.of(context).colorScheme.primary,
+                        ? scheme.error
+                        : scheme.primary,
                     foregroundColor: isSynced
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.onPrimary,
+                        ? scheme.onPrimaryContainer
+                        : scheme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
-                    elevation: isSynced ? 0 : 2,
+                    elevation: 0,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-
-            // Delete button - with improved styling
-            Expanded(
-              child: SizedBox(
-                height: 50,
-                child: OutlinedButton.icon(
-                  onPressed: patientState.isDeleting || patientState.loading
-                      ? null
-                      : () async {
-                          final shouldDelete = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Delete Patient'),
-                              content: const Text(
-                                'Are you sure you want to delete this patient record? This action cannot be undone.',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.error,
-                                  ),
-                                  child: const Text('Delete'),
-                                ),
-                              ],
+            const SizedBox(width: 10),
+            SizedBox(
+              width: 52,
+              height: 52,
+              child: OutlinedButton(
+                onPressed: patientState.isDeleting || patientState.loading
+                    ? null
+                    : () async {
+                        final shouldDelete = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete Patient'),
+                            content: const Text(
+                              'Are you sure you want to delete this patient record? This action cannot be undone.',
                             ),
-                          );
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: scheme.error,
+                                ),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
 
-                          if (shouldDelete == true && mounted) {
-                            final success = await ref
-                                .read(patientControllerProvider.notifier)
-                                .delete();
+                        if (shouldDelete == true && mounted) {
+                          final success = await ref
+                              .read(patientControllerProvider.notifier)
+                              .delete();
 
-                            // Invalidate providers to refresh
-                            ref.invalidate(homeControllerProvider);
-                            ref.invalidate(queueControllerProvider);
-                            ref.invalidate(historyControllerProvider);
+                          ref.invalidate(homeControllerProvider);
+                          ref.invalidate(queueControllerProvider);
+                          ref.invalidate(historyControllerProvider);
 
-                            if (mounted) {
-                              if (success) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Patient deleted successfully',
-                                    ),
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
+                          if (mounted) {
+                            if (success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                    'Patient deleted successfully',
                                   ),
-                                );
-                                // Navigate back to queue
-                                context.go('/queue');
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Failed to delete patient'),
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.error,
+                                  backgroundColor: scheme.primary,
+                                ),
+                              );
+                              context.go('/queue');
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                    'Failed to delete patient',
                                   ),
-                                );
-                              }
+                                  backgroundColor: scheme.error,
+                                ),
+                              );
                             }
                           }
-                        },
-                  icon: patientState.isDeleting
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        )
-                      : const Icon(Icons.delete, size: 20),
-                  label: const Text(''),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                    ),
+                        }
+                      },
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  foregroundColor: scheme.error,
+                  side: BorderSide(color: scheme.error.withValues(alpha: 0.5)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
                   ),
                 ),
+                child: patientState.isDeleting
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: scheme.error,
+                        ),
+                      )
+                    : const Icon(Icons.delete_outline, size: 22),
               ),
             ),
           ],
@@ -1022,27 +960,18 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Patient Name',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Patient Name'),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: complaintController,
-                decoration: const InputDecoration(
-                  labelText: 'Chief Complaint',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Chief Complaint'),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: notesController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Clinical Notes',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Clinical Notes'),
               ),
             ],
           ),
@@ -1057,7 +986,7 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
               if (nameController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Patient name is required'),
+                    content: const Text('Patient name is required'),
                     backgroundColor: Theme.of(context).colorScheme.error,
                   ),
                 );
@@ -1083,17 +1012,15 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Patient record updated'),
+                    content: const Text('Patient record updated'),
                     backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
                 );
 
-                // Invalidate to refresh
                 ref.invalidate(homeControllerProvider);
                 ref.invalidate(queueControllerProvider);
                 ref.invalidate(historyControllerProvider);
 
-                // Refresh the current view
                 setState(() {});
               }
             },
@@ -1104,8 +1031,9 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
     );
   }
 
-  // Helper methods
-  Color _getPriorityColor(int priority) {
+  // ==================== HELPERS ====================
+
+  Color _getPriorityColor(BuildContext context, int priority) {
     switch (priority) {
       case 1:
         return Theme.of(context).colorScheme.error;
@@ -1118,6 +1046,12 @@ class _PatientDetailsScreenState extends ConsumerState<PatientDetailsScreen> {
       default:
         return Theme.of(context).colorScheme.primary;
     }
+  }
+
+  /// P3's priority color is a light gold — white text/icons on it would be
+  /// unreadable, so that one case gets dark foreground instead.
+  Color _heroForeground(int priority) {
+    return priority == 3 ? Colors.black87 : Colors.white;
   }
 
   String _getPriorityLabel(int priority) {
@@ -1162,85 +1096,138 @@ class TimelineEvent {
   final String description;
   final String time;
   final Color dotColor;
-  final Color cardColor;
 
   const TimelineEvent({
     required this.title,
     required this.description,
     required this.time,
     required this.dotColor,
-    required this.cardColor,
   });
 }
 
-class _DetailCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final String subtitle;
-  final Color color;
-  final IconData? icon;
-
-  const _DetailCard({
-    required this.title,
-    required this.value,
-    required this.subtitle,
-    required this.color,
-    this.icon,
+class _HeroIconButton extends StatelessWidget {
+  const _HeroIconButton({
+    required this.icon,
+    required this.foreground,
+    required this.onTap,
   });
+
+  final IconData icon;
+  final Color foreground;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: foreground.withValues(alpha: 0.16),
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 38,
+          height: 38,
+          child: Icon(icon, color: foreground, size: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroChip extends StatelessWidget {
+  const _HeroChip({
+    required this.icon,
+    required this.label,
+    required this.foreground,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color foreground;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(left: BorderSide(color: color, width: 4)),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
-        ],
+        color: foreground.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(AppRadius.full),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          Icon(icon, size: 14, color: foreground),
+          const SizedBox(width: 6),
           Text(
-            title,
+            label,
             style: AppTypography.textTheme.labelMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              letterSpacing: 1,
+              color: foreground,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
-          if (icon != null) ...[
-            Row(
+        ],
+      ),
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  const _StatPill({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: AppDecorations.flatCard(
+        context,
+        color: scheme.surfaceContainerLow,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 15, color: color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, size: 16, color: color),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    value,
-                    style: AppTypography.textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
-                    ),
+                Text(
+                  label,
+                  style: AppTypography.textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.textTheme.titleMedium?.copyWith(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
-            ),
-          ] else ...[
-            Text(
-              value,
-              style: AppTypography.textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: AppTypography.textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_decorations.dart';
 import '../../../../../core/theme/app_spacing.dart';
 
 class BottomNavBar extends StatelessWidget {
@@ -14,14 +14,8 @@ class BottomNavBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainer,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: AppDecorations.barShadow(context),
       ),
       child: SafeArea(
         top: false,
@@ -30,7 +24,6 @@ class BottomNavBar extends StatelessWidget {
           child: SizedBox(
             height: 64,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _NavItem(
                   icon: Icons.home_outlined,
@@ -86,39 +79,56 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(
-          color: isActive ? Theme.of(context).colorScheme.secondaryContainer : Colors.transparent,
-          borderRadius: BorderRadius.circular(9999),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              color: isActive
-                  ? Theme.of(context).colorScheme.onSecondaryContainer
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-              size: 24,
+    final scheme = Theme.of(context).colorScheme;
+    final activeColor = scheme.onSecondaryContainer;
+    final inactiveColor = scheme.onSurfaceVariant;
+
+    return Expanded(
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Fixed-size pill so it's identical across every tab,
+                // regardless of how long that tab's label is.
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  width: 56,
+                  height: 32,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? scheme.secondaryContainer
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    isActive ? activeIcon : icon,
+                    color: isActive ? activeColor : inactiveColor,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                    letterSpacing: 0.5,
+                    color: isActive ? activeColor : inactiveColor,
+                  ),
+                  child: Text(label),
+                ),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.5,
-                color: isActive
-                    ? Theme.of(context).colorScheme.onSecondaryContainer
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

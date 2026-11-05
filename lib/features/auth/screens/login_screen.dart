@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../../core/theme/app_decorations.dart';
 import '../../../../../core/theme/app_radius.dart';
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../../../core/theme/app_typography.dart';
+import '../../triage/widgets/shared/custom_app_bar.dart';
+import '../controllers/auth_controller.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -26,24 +29,27 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    setState(() => _isLoading = true);
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        context.go('/home');
-      }
-    });
+  Future<void> _handleLogin() async {
+    final success = await ref
+        .read(authControllerProvider.notifier)
+        .login(
+          username: _emailController.text,
+          password: _passwordController.text,
+        );
+    if (success && mounted) {
+      context.go('/home');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             // AppBar
-            _buildAppBar(),
+            CustomAppBar(title: 'RapidTriage', leadingIcon: Icons.emergency),
             // Content
             Expanded(
               child: SingleChildScrollView(
@@ -55,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: AppSpacing.xl),
                     _buildBrandingHeader(),
                     const SizedBox(height: AppSpacing.lg),
-                    _buildLoginForm(),
+                    _buildLoginForm(authState),
                     const SizedBox(height: AppSpacing.md),
                     _buildBiometricOption(),
                     const SizedBox(height: AppSpacing.lg),
@@ -71,49 +77,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildAppBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginMobile),
-      height: AppSpacing.touchTargetMin,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.emergency, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            'RapidTriage',
-            style: AppTypography.textTheme.headlineSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          // const Spacer(),
-          // Icon(
-          //   Icons.cloud_sync,
-          //   color: Theme.of(context).colorScheme.onSurfaceVariant,
-          //   size: 20,
-          // ),
-          // const SizedBox(width: AppSpacing.xs),
-          // Text(
-          //   'SYNCED',
-          //   style: AppTypography.textTheme.labelMedium?.copyWith(
-          //     color: Theme.of(context).colorScheme.onSurfaceVariant,
-          //   ),
-          // ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildBrandingHeader() {
     return Column(
       children: [
@@ -121,15 +84,22 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 96,
           height: 96,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(AppRadius.xl),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8),
+              BoxShadow(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
             ],
           ),
           child: Icon(
             Icons.emergency,
             size: 48,
-            color: Theme.of(context).colorScheme.primary,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -151,14 +121,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildLoginForm() {
+  Widget _buildLoginForm(AuthState authState) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: AppDecorations.card(context),
       child: Column(
         children: [
           // Email
@@ -179,24 +145,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: Icon(
                     Icons.person_outline,
                     color: Theme.of(context).colorScheme.outline,
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface,
-                  border: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                  ),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
-                    ),
                   ),
                 ),
               ),
@@ -232,24 +180,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     onPressed: () =>
                         setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface,
-                  border: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                  ),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
-                    ),
                   ),
                 ),
               ),
@@ -296,13 +226,30 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
+          if (authState.error != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Text(
+                authState.error!,
+                style: AppTypography.textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           // Login Button
           SizedBox(
             width: double.infinity,
             height: AppSpacing.touchTargetMin,
             child: FilledButton(
-              onPressed: _isLoading ? null : _handleLogin,
+              onPressed: authState.isLoading ? null : _handleLogin,
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -310,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
               ),
-              child: _isLoading
+              child: authState.isLoading
                   ? SizedBox(
                       width: 24,
                       height: 24,
@@ -387,10 +334,7 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 64,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              width: 2,
-            ),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
           ),
           child: IconButton(
             icon: Icon(
@@ -423,14 +367,10 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainer,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
+        boxShadow: AppDecorations.barShadow(context),
       ),
       child: Column(
         children: [

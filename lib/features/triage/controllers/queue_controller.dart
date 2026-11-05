@@ -1,5 +1,6 @@
 import 'package:flutter_rapid_triage/app/app_providers.dart';
 import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
+import 'package:flutter_rapid_triage/core/utils/sentinel.dart';
 import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
 import 'package:flutter_rapid_triage/features/triage/repositories/triage_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,18 +25,20 @@ class QueueState {
   QueueState copyWith({
     bool? loading,
     String? search,
-    int? priority,
-    String? statusFilter,
+    Object? priority = unset,
+    Object? statusFilter = unset,
     List<TriageRecord>? records,
-    String? error,
+    Object? error = unset,
   }) {
     return QueueState(
       loading: loading ?? this.loading,
       search: search ?? this.search,
-      priority: priority ?? this.priority,
-      statusFilter: statusFilter ?? this.statusFilter,
+      priority: priority == unset ? this.priority : priority as int?,
+      statusFilter: statusFilter == unset
+          ? this.statusFilter
+          : statusFilter as String?,
       records: records ?? this.records,
-      error: error ?? this.error,
+      error: error == unset ? this.error : error as String?,
     );
   }
 }
@@ -43,8 +46,9 @@ class QueueState {
 class QueueController extends Notifier<QueueState> {
   @override
   QueueState build() {
-    // Load records on initialization
-    load();
+    // Deferred: load() reads `state` (via copyWith), which isn't valid
+    // until build() has returned and the provider has initialized.
+    Future.microtask(load);
     return const QueueState();
   }
 

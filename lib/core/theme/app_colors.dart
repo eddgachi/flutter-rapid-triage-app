@@ -79,6 +79,18 @@ class AppColors {
   static const Color darkInverseSurface = Color(0xFFE5E1E7);
   static const Color darkSurfaceVariant = Color(0xFF434654);
 
+  // Dark-theme container colors. The light-theme container colors (e.g.
+  // errorContainer FFDAD6) are pale pastels meant to sit on a light
+  // surface — reused as-is in dark mode they render as a bright, jarring
+  // patch on an otherwise dark screen, so dark mode gets its own,
+  // darker tones with light "on" text, following Material 3 convention.
+  static const Color darkPrimaryContainer = Color(0xFF0040A2);
+  static const Color darkOnPrimaryContainer = Color(0xFFDAE2FF);
+  static const Color darkSecondaryContainer = Color(0xFF004786);
+  static const Color darkOnSecondaryContainer = Color(0xFFD4E3FF);
+  static const Color darkErrorContainer = Color(0xFF93000A);
+  static const Color darkOnErrorContainer = Color(0xFFFFDAD6);
+
   // Triage Priority Colors
   static const Color p1Critical = Color(0xFFBA1A1A);
   static const Color p2Urgent = Color(0xFFFF8C00);

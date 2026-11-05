@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
 import 'package:flutter_rapid_triage/core/theme/app_colors.dart';
+import 'package:flutter_rapid_triage/core/theme/app_decorations.dart';
 import 'package:flutter_rapid_triage/core/theme/app_radius.dart';
 import 'package:flutter_rapid_triage/core/theme/app_spacing.dart';
 import 'package:flutter_rapid_triage/core/theme/app_typography.dart';
+import 'package:flutter_rapid_triage/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/history_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/home_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/queue_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/controllers/sync_controller.dart';
 import 'package:flutter_rapid_triage/features/triage/models/triage_record.dart';
-import 'package:flutter_rapid_triage/features/triage/screens/patient/patient_details_screen.dart';
 import 'package:flutter_rapid_triage/features/triage/widgets/shared/bottom_nav_bar.dart';
 import 'package:flutter_rapid_triage/features/triage/widgets/shared/connectivity_indicator.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/custom_app_bar.dart';
+import 'package:flutter_rapid_triage/features/triage/widgets/shared/incident_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -74,6 +77,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                       syncState: syncState,
                     ),
                     const SizedBox(height: AppSpacing.lg),
+                    _buildIncidentMap(context, homeState.allPatients),
+                    const SizedBox(height: AppSpacing.lg),
                     _buildQuickActions(context),
                     const SizedBox(height: AppSpacing.lg),
                     _buildRecentActivity(context, recentRecords),
@@ -89,68 +94,39 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   }
 
   Widget _buildAppBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginMobile),
-      height: AppSpacing.touchTargetMin,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
+    return CustomAppBar(
+      title: 'RapidTriage',
+      leadingIcon: Icons.emergency,
+      subtitle: Text(
+        'City General Hospital',
+        style: AppTypography.textTheme.labelMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
-      child: Row(
-        children: [
-          Icon(Icons.emergency, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: AppSpacing.sm),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'RapidTriage',
-                style: AppTypography.textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+      trailing: GestureDetector(
+        onTap: () async {
+          final syncController = ref.read(syncControllerProvider.notifier);
+          await syncController.syncNow();
+          ref.invalidate(homeControllerProvider);
+          ref.invalidate(queueControllerProvider);
+          ref.invalidate(historyControllerProvider);
+          if (context.mounted) {
+            final s = ref.read(syncControllerProvider);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  s.isConnected
+                      ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
+                      : 'No internet connection',
                 ),
+                backgroundColor: s.isConnected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.error,
               ),
-              Text(
-                'City General Hospital',
-                style: AppTypography.textTheme.labelMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: () async {
-              final syncController = ref.read(syncControllerProvider.notifier);
-              await syncController.syncNow();
-              ref.invalidate(homeControllerProvider);
-              ref.invalidate(queueControllerProvider);
-              ref.invalidate(historyControllerProvider);
-              if (context.mounted) {
-                final s = ref.read(syncControllerProvider);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      s.isConnected
-                          ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
-                          : 'No internet connection',
-                    ),
-                    backgroundColor: s.isConnected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.error,
-                  ),
-                );
-              }
-            },
-            child: const ConnectivityIndicator(),
-          ),
-        ],
+            );
+          }
+        },
+        child: const ConnectivityIndicator(),
       ),
     );
   }
@@ -181,6 +157,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   }
 
   Widget _buildWelcome(HomeState homeState, SyncState syncState) {
+    final userName = ref.watch(authControllerProvider).user?.name ?? 'Guest';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -188,7 +165,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Welcome, John Doe',
+              'Welcome, $userName',
               style: AppTypography.textTheme.headlineSmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
@@ -306,6 +283,52 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
     );
   }
 
+  Widget _buildIncidentMap(BuildContext context, List<TriageRecord> patients) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Nearby Incidents',
+              style: AppTypography.textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            Row(
+              children: [
+                Icon(
+                  Icons.my_location,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Live',
+                  style: AppTypography.textTheme.labelMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: AppDecorations.card(context),
+          child: IncidentMapCard(
+            incidents: patients,
+            height: 200,
+            onIncidentTap: (record) => context.push('/patient/${record.id}'),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildQuickActions(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,7 +373,11 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 textColor: Theme.of(context).colorScheme.onSurface,
                 onTap: () {
-                  // TODO: Implement NFC scanning
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('NFC bracelet scanning is coming soon'),
+                    ),
+                  );
                 },
               ),
             ),
@@ -457,35 +484,49 @@ class _DashboardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 128,
+      height: 88,
       width: null,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: AppDecorations.card(
+        context,
         color: bgColor,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        radius: AppRadius.lg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: AppTypography.textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                value,
-                style: AppTypography.textTheme.headlineMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTypography.textTheme.labelMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
-              Icon(icon, size: 40, color: iconColor.withOpacity(0.2)),
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 13, color: iconColor),
+              ),
             ],
+          ),
+          Text(
+            value,
+            style: AppTypography.textTheme.titleLarge?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -510,26 +551,27 @@ class _QuickActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 72,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 28, color: textColor),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              label,
-              style: AppTypography.textTheme.titleMedium?.copyWith(
-                color: textColor,
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: SizedBox(
+          height: 72,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 28, color: textColor),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                label,
+                style: AppTypography.textTheme.titleMedium?.copyWith(
+                  color: textColor,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -546,70 +588,70 @@ class _ActivityCard extends StatelessWidget {
     final priorityColor = _getPriorityColor(record.priority, context);
     final isSynced = record.syncStatus == SyncStatus.synced;
 
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => PatientDetailsScreen(patientId: record.id),
-        ),
-      ),
-      child: Container(
-        height: 80,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        onTap: () => context.push('/patient/${record.id}'),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Container(
+          height: 80,
+          decoration: AppDecorations.flatCard(context),
+          child: Row(
+            children: [
+              Container(
+                width: 12,
+                decoration: BoxDecoration(
+                  color: priorityColor,
+                  borderRadius: BorderRadius.horizontal(
+                    left: Radius.circular(AppRadius.lg),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            record.patient.name,
+                            style: AppTypography.textTheme.titleMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${_getPriorityLabel(record.priority)} \u2022 ${_formatTime(record.createdAt)}',
+                            style: AppTypography.textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Icon(
+                        isSynced ? Icons.cloud_done : Icons.cloud_off,
+                        color: isSynced
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.error,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 12,
-              decoration: BoxDecoration(
-                color: priorityColor,
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(12),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          record.patient.name,
-                          style: AppTypography.textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${_getPriorityLabel(record.priority)} \u2022 ${_formatTime(record.createdAt)}',
-                          style: AppTypography.textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Icon(
-                      isSynced ? Icons.cloud_done : Icons.cloud_off,
-                      color: isSynced
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.error,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

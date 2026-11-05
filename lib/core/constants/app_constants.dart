@@ -8,6 +8,11 @@ class AppConstants {
   static const authBox = 'auth';
   static const settingsBox = 'settings';
   static const triageBox = 'triage_records';
+
+  /// Fallback map center used whenever live location is unavailable
+  /// (denied, disabled, no fix, offline) — Nairobi CBD.
+  static const double fallbackLatitude = -1.286389;
+  static const double fallbackLongitude = 36.817223;
 }
 
 class TriageLevel {

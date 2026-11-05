@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_radius.dart';
 import '../../../../../core/theme/app_spacing.dart';
 
@@ -29,7 +28,8 @@ class PrimaryButton extends StatelessWidget {
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.primary,
+          backgroundColor:
+              backgroundColor ?? Theme.of(context).colorScheme.primary,
           foregroundColor: textColor ?? Theme.of(context).colorScheme.onPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.full),

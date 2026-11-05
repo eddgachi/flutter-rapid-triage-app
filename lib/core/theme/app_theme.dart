@@ -76,19 +76,26 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceVariant,
-        border: const UnderlineInputBorder(
-          borderSide: BorderSide(color: AppColors.outline),
+        fillColor: AppColors.surfaceContainerLow,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: AppColors.outlineVariant),
         ),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: AppColors.outline),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: AppColors.outlineVariant),
         ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          vertical: AppSpacing.md,
         ),
       ),
     );
@@ -102,20 +109,20 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         onPrimary: AppColors.onPrimary,
-        primaryContainer: AppColors.primaryContainer,
-        onPrimaryContainer: AppColors.onPrimaryContainer,
+        primaryContainer: AppColors.darkPrimaryContainer,
+        onPrimaryContainer: AppColors.darkOnPrimaryContainer,
         secondary: AppColors.secondary,
         onSecondary: AppColors.onSecondary,
-        secondaryContainer: AppColors.secondaryContainer,
-        onSecondaryContainer: AppColors.onSecondaryContainer,
+        secondaryContainer: AppColors.darkSecondaryContainer,
+        onSecondaryContainer: AppColors.darkOnSecondaryContainer,
         tertiary: AppColors.tertiary,
         onTertiary: AppColors.onTertiary,
         tertiaryContainer: AppColors.tertiaryContainer,
         onTertiaryContainer: AppColors.onTertiaryContainer,
         error: AppColors.error,
         onError: AppColors.onError,
-        errorContainer: AppColors.errorContainer,
-        onErrorContainer: AppColors.onErrorContainer,
+        errorContainer: AppColors.darkErrorContainer,
+        onErrorContainer: AppColors.darkOnErrorContainer,
         surface: AppColors.darkSurface,
         onSurface: AppColors.darkOnSurface,
         onSurfaceVariant: AppColors.darkOnSurfaceVariant,
@@ -156,25 +163,32 @@ class AppTheme {
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        indicatorColor: AppColors.secondaryContainer,
+        indicatorColor: AppColors.darkSecondaryContainer,
         backgroundColor: AppColors.darkSurfaceContainer,
         elevation: 8,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.darkSurfaceVariant,
-        border: const UnderlineInputBorder(
-          borderSide: BorderSide(color: AppColors.outline),
+        fillColor: AppColors.darkSurfaceContainerHigh,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.outline),
         ),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: AppColors.outline),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.outline),
         ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          vertical: AppSpacing.md,
         ),
       ),
     );

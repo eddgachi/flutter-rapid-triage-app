@@ -11,6 +11,8 @@ class SyncService {
   final TriageRepository _repository;
   final ApiService _apiService;
   final ConnectivityService _connectivityService;
+  final bool Function() _isAutoSyncEnabled;
+  final bool Function() _isWifiOnly;
   StreamSubscription? _connectivitySubscription;
   Timer? _syncTimer;
 
@@ -18,31 +20,46 @@ class SyncService {
     required TriageRepository repository,
     required ApiService apiService,
     required ConnectivityService connectivityService,
+    bool Function() isAutoSyncEnabled = _alwaysTrue,
+    bool Function() isWifiOnly = _alwaysFalse,
   }) : _repository = repository,
        _apiService = apiService,
-       _connectivityService = connectivityService;
+       _connectivityService = connectivityService,
+       _isAutoSyncEnabled = isAutoSyncEnabled,
+       _isWifiOnly = isWifiOnly;
+
+  static bool _alwaysTrue() => true;
+  static bool _alwaysFalse() => false;
+
+  // Whether an automatic (non-user-initiated) sync is currently allowed,
+  // respecting the "Background Auto-sync" and "Sync over WiFi only" settings.
+  Future<bool> _canAutoSync() async {
+    if (!_isAutoSyncEnabled()) return false;
+    if (_isWifiOnly()) return _connectivityService.isOnWifi();
+    return _connectivityService.isConnected();
+  }
 
   // Start listening to connectivity changes
   void startListening() {
-    _connectivitySubscription = _connectivityService.changes.listen((results) {
+    _connectivitySubscription = _connectivityService.changes.listen((
+      results,
+    ) async {
       final isConnected = !results.contains(ConnectivityResult.none);
-      if (isConnected) {
+      if (isConnected && await _canAutoSync()) {
         _performSync();
       }
     });
 
     // Sync every 5 minutes if connected
-    _syncTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
-      _connectivityService.isConnected().then((connected) {
-        if (connected) {
-          _performSync();
-        }
-      });
+    _syncTimer = Timer.periodic(const Duration(minutes: 5), (timer) async {
+      if (await _canAutoSync()) {
+        _performSync();
+      }
     });
 
     // Initial sync check
-    _connectivityService.isConnected().then((connected) {
-      if (connected) {
+    _canAutoSync().then((canSync) {
+      if (canSync) {
         _performSync();
       }
     });
@@ -82,23 +99,33 @@ class SyncService {
           await _repository.updateSyncStatus(record.id, SyncStatus.syncing);
 
           // Send to API
-          await _apiService.client.post(
-            '/triage/records',
-            data: record.toJson(),
-          );
+          await _apiService.submitRecord(record.toJson());
 
           // Mark as synced, clear any error
-          await _repository.updateSyncStatusWithError(record.id, SyncStatus.synced, null);
+          await _repository.updateSyncStatusWithError(
+            record.id,
+            SyncStatus.synced,
+            null,
+          );
           synced++;
         } catch (e) {
           final errorMsg = _extractErrorReason(e);
           lastError = errorMsg;
-          await _repository.updateSyncStatusWithError(record.id, SyncStatus.failed, errorMsg);
+          await _repository.updateSyncStatusWithError(
+            record.id,
+            SyncStatus.failed,
+            errorMsg,
+          );
           failed++;
         }
       }
 
-      return SyncResult(success: failed == 0, synced: synced, failed: failed, error: lastError);
+      return SyncResult(
+        success: failed == 0,
+        synced: synced,
+        failed: failed,
+        error: lastError,
+      );
     } catch (e) {
       return SyncResult(
         success: false,
@@ -109,25 +136,14 @@ class SyncService {
     }
   }
 
+  // ApiService throws plain Exceptions with an already human-readable
+  // message (there's no real HTTP client under it to produce status codes
+  // or socket errors), so this just strips Dart's "Exception: " prefix.
   String _extractErrorReason(Object error) {
     final msg = error.toString();
-    if (msg.contains('SocketException') || msg.contains('Connection refused') || msg.contains('No address associated')) {
-      return 'Connection error: Unable to reach server';
-    }
-    if (msg.contains('TimeoutException') || msg.contains('timed out')) {
-      return 'Request timed out';
-    }
-    if (msg.contains('400')) {
-      return 'Bad request: Invalid record data';
-    }
-    if (msg.contains('401') || msg.contains('403')) {
-      return 'Authentication error: Unauthorized';
-    }
-    if (msg.contains('404')) {
-      return 'Server endpoint not found';
-    }
-    if (msg.contains('500') || msg.contains('502') || msg.contains('503')) {
-      return 'Server error: Service unavailable';
+    const prefix = 'Exception: ';
+    if (msg.startsWith(prefix)) {
+      return msg.substring(prefix.length);
     }
     if (msg.length > 80) {
       return msg.substring(0, 80);
@@ -151,7 +167,11 @@ class SyncService {
   Future<bool> syncRecord(String id) async {
     final connected = await _connectivityService.isConnected();
     if (!connected) {
-      await _repository.updateSyncStatusWithError(id, SyncStatus.failed, 'No internet connection');
+      await _repository.updateSyncStatusWithError(
+        id,
+        SyncStatus.failed,
+        'No internet connection',
+      );
       return false;
     }
 
@@ -161,16 +181,17 @@ class SyncService {
 
       await _repository.updateSyncStatusWithError(id, SyncStatus.syncing, null);
 
-      await _apiService.client.put(
-        '/triage/records/$id',
-        data: record.toJson(),
-      );
+      await _apiService.updateRecord(id, record.toJson());
 
       await _repository.updateSyncStatusWithError(id, SyncStatus.synced, null);
       return true;
     } catch (e) {
       final errorMsg = _extractErrorReason(e);
-      await _repository.updateSyncStatusWithError(id, SyncStatus.failed, errorMsg);
+      await _repository.updateSyncStatusWithError(
+        id,
+        SyncStatus.failed,
+        errorMsg,
+      );
       return false;
     }
   }

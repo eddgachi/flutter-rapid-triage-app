@@ -1,5 +1,6 @@
 import 'package:flutter_rapid_triage/app/app_initializer.dart';
 import 'package:flutter_rapid_triage/core/services/permission_service.dart';
+import 'package:flutter_rapid_triage/features/auth/repositories/auth_repository.dart';
 import 'package:flutter_rapid_triage/features/triage/repositories/triage_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,4 +39,8 @@ final permissionServiceProvider = Provider<PermissionService>((ref) {
 final triageRepositoryProvider = Provider<TriageRepository>((ref) {
   final hiveService = ref.watch(hiveServiceProvider);
   return TriageRepository(hiveService: hiveService);
+});
+
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return AppInitializer.authRepository;
 });

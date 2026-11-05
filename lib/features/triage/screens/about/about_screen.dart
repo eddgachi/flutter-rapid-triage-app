@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_decorations.dart';
 import '../../../../../core/theme/app_radius.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../widgets/shared/bottom_nav_bar.dart';
+import '../../widgets/shared/custom_app_bar.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -39,36 +41,12 @@ class AboutScreen extends StatelessWidget {
   }
 
   Widget _buildAppBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      height: 48,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.emergency, color: AppColors.primary),
-          const SizedBox(width: 8),
-          Text(
-            'RapidTriage',
-            style: AppTypography.textTheme.headlineSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Spacer(),
-          Icon(
-            Icons.cloud_sync,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ],
+    return CustomAppBar(
+      title: 'RapidTriage',
+      leadingIcon: Icons.emergency,
+      trailing: Icon(
+        Icons.cloud_sync,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     );
   }
@@ -77,12 +55,10 @@ class AboutScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
+      decoration: AppDecorations.card(
+        context,
         color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
-        ),
+        radius: AppRadius.xl,
       ),
       child: Column(
         children: [
@@ -90,16 +66,22 @@ class AboutScreen extends StatelessWidget {
             width: 128,
             height: 128,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8),
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
               ],
             ),
             child: Icon(
               Icons.emergency,
               size: 64,
-              color: Theme.of(context).colorScheme.primary,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
             ),
           ),
           const SizedBox(height: 16),
@@ -121,7 +103,7 @@ class AboutScreen extends StatelessWidget {
           Container(
             width: 64,
             height: 1,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
           ),
           const SizedBox(height: 16),
           Text(
@@ -279,12 +261,10 @@ class _TechCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: AppDecorations.flatCard(
+        context,
         color: Theme.of(context).colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
-        ),
+        radius: AppRadius.md,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,27 +307,38 @@ class _LegalLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              label,
-              style: AppTypography.textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
+        onTap: () {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('$label is coming soon')));
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          decoration: AppDecorations.flatCard(context, radius: AppRadius.md),
+          child: Row(
+            children: [
+              Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTypography.textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
               ),
-            ),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ],
           ),
-          Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.outline),
-        ],
+        ),
       ),
     );
   }

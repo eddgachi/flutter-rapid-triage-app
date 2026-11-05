@@ -4,10 +4,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_decorations.dart';
 import '../../../../../core/theme/app_typography.dart';
+import '../../../../app/app_providers.dart';
+import '../../../auth/controllers/auth_controller.dart';
+import '../../controllers/history_controller.dart';
+import '../../controllers/home_controller.dart';
+import '../../controllers/queue_controller.dart';
+import '../../controllers/settings_controller.dart';
 import '../../controllers/sync_controller.dart';
 import '../../widgets/shared/bottom_nav_bar.dart';
 import '../../widgets/shared/connectivity_indicator.dart';
+import '../../widgets/shared/custom_app_bar.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -16,6 +24,9 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
     final isDarkMode = themeMode == ThemeMode.dark;
+    final settingsState = ref.watch(settingsControllerProvider);
+    final settingsController = ref.read(settingsControllerProvider.notifier);
+    final recordCount = ref.watch(triageRepositoryProvider).totalPatients();
 
     return Scaffold(
       body: SafeArea(
@@ -36,7 +47,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _buildProfile(context),
+                    _buildProfile(context, ref),
                     const SizedBox(height: 24),
                     _buildSection(
                       'Organization',
@@ -87,15 +98,15 @@ class SettingsScreen extends ConsumerWidget {
                         _SettingToggle(
                           icon: Icons.location_on,
                           title: 'GPS Tracking',
-                          value: true,
-                          onChanged: (_) {},
+                          value: settingsState.gpsTrackingEnabled,
+                          onChanged: settingsController.setGpsTracking,
                         ),
                         const _SettingDivider(),
                         _SettingToggle(
                           icon: Icons.nfc,
                           title: 'NFC Bracelet Scanning',
-                          value: true,
-                          onChanged: (_) {},
+                          value: settingsState.nfcScanningEnabled,
+                          onChanged: settingsController.setNfcScanning,
                         ),
                       ],
                     ),
@@ -107,15 +118,15 @@ class SettingsScreen extends ConsumerWidget {
                         _SettingToggle(
                           icon: Icons.sync,
                           title: 'Background Auto-sync',
-                          value: true,
-                          onChanged: (_) {},
+                          value: settingsState.backgroundAutoSyncEnabled,
+                          onChanged: settingsController.setBackgroundAutoSync,
                         ),
                         const _SettingDivider(),
                         _SettingToggle(
                           icon: Icons.wifi,
                           title: 'Sync over WiFi only',
-                          value: false,
-                          onChanged: (_) {},
+                          value: settingsState.syncOverWifiOnly,
+                          onChanged: settingsController.setSyncOverWifiOnly,
                         ),
                       ],
                     ),
@@ -130,33 +141,81 @@ class SettingsScreen extends ConsumerWidget {
                           trailing: Icons.arrow_outward,
                         ),
                         const _SettingDivider(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          height: 56,
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.delete_sweep,
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  'Clear Local Cache',
-                                  style: AppTypography.textTheme.bodyLarge
-                                      ?.copyWith(color: AppColors.error),
+                        InkWell(
+                          onTap: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Clear Local Cache'),
+                                content: Text(
+                                  'This will permanently delete all $recordCount '
+                                  'local patient record(s) that have not been '
+                                  'synced. This action cannot be undone.',
                                 ),
-                              ),
-                              Text(
-                                '124 MB',
-                                style: AppTypography.textTheme.labelMedium
-                                    ?.copyWith(
-                                      color: Theme.of(
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Theme.of(
                                         context,
-                                      ).colorScheme.onSurfaceVariant,
+                                      ).colorScheme.error,
                                     ),
+                                    child: const Text('Clear'),
+                                  ),
+                                ],
                               ),
-                            ],
+                            );
+
+                            if (confirmed == true) {
+                              await ref
+                                  .read(triageRepositoryProvider)
+                                  .deleteAll();
+                              ref.invalidate(homeControllerProvider);
+                              ref.invalidate(queueControllerProvider);
+                              ref.invalidate(historyControllerProvider);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Local cache cleared'),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            height: 56,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete_sweep,
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    'Clear Local Cache',
+                                    style: AppTypography.textTheme.bodyLarge
+                                        ?.copyWith(color: AppColors.error),
+                                  ),
+                                ),
+                                Text(
+                                  '$recordCount record(s)',
+                                  style: AppTypography.textTheme.labelMedium
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -166,7 +225,37 @@ class SettingsScreen extends ConsumerWidget {
                       width: double.infinity,
                       height: 48,
                       child: FilledButton.icon(
-                        onPressed: () {},
+                        onPressed: () async {
+                          final shouldLogout = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Logout'),
+                              content: const Text(
+                                'Are you sure you want to logout?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Logout'),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (shouldLogout == true) {
+                            await ref
+                                .read(authControllerProvider.notifier)
+                                .logout();
+                            if (context.mounted) {
+                              context.go('/login');
+                            }
+                          }
+                        },
                         icon: const Icon(Icons.logout),
                         label: const Text('Logout'),
                         style: FilledButton.styleFrom(
@@ -202,7 +291,7 @@ class SettingsScreen extends ConsumerWidget {
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurfaceVariant
-                                      .withOpacity(0.7),
+                                      .withValues(alpha: 0.7),
                                 ),
                           ),
                         ],
@@ -232,64 +321,46 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildAppBar(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      height: 56,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.emergency, color: AppColors.primary),
-          const SizedBox(width: 8),
-          Text(
-            'RapidTriage',
-            style: AppTypography.textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: () async {
-              await ref.read(syncControllerProvider.notifier).syncNow();
-              if (context.mounted) {
-                final s = ref.read(syncControllerProvider);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      s.isConnected
-                          ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
-                          : 'No internet connection',
-                    ),
-                    backgroundColor: s.isConnected
-                        ? AppColors.primary
-                        : Theme.of(context).colorScheme.error,
-                  ),
-                );
-              }
-            },
-            child: const ConnectivityIndicator(),
-          ),
-        ],
+    return CustomAppBar(
+      title: 'RapidTriage',
+      leadingIcon: Icons.emergency,
+      trailing: GestureDetector(
+        onTap: () async {
+          await ref.read(syncControllerProvider.notifier).syncNow();
+          if (context.mounted) {
+            final s = ref.read(syncControllerProvider);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  s.isConnected
+                      ? 'Sync: ${s.syncedCount} succeeded, ${s.failedCount} failed'
+                      : 'No internet connection',
+                ),
+                backgroundColor: s.isConnected
+                    ? AppColors.primary
+                    : Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+        },
+        child: const ConnectivityIndicator(),
       ),
     );
   }
 
-  Widget _buildProfile(BuildContext context) {
+  Widget _buildProfile(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authControllerProvider).user;
+    final badgeId = user == null
+        ? ''
+        : user.id.length > 6
+        ? user.id.substring(user.id.length - 6)
+        : user.id;
+
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: AppDecorations.card(
+        context,
         color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.outlineVariant),
       ),
       child: Row(
         children: [
@@ -308,25 +379,27 @@ class SettingsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'James Wilson',
+                  user?.name ?? 'Guest',
                   style: AppTypography.textTheme.titleLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Senior Lead Paramedic',
+                  'Field Clinician',
                   style: AppTypography.textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Badge #PR-4492',
-                  style: AppTypography.textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
+                if (badgeId.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Badge #$badgeId',
+                    style: AppTypography.textTheme.labelMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -357,11 +430,8 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ),
         Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.outlineVariant),
-          ),
+          decoration: AppDecorations.card(context),
+          clipBehavior: Clip.antiAlias,
           child: Column(children: children),
         ),
       ],
@@ -456,7 +526,7 @@ class _SettingToggle extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: Theme.of(context).colorScheme.primary,
+            activeThumbColor: Theme.of(context).colorScheme.primary,
           ),
         ],
       ),

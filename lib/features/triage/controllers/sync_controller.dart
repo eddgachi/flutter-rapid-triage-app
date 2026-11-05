@@ -2,6 +2,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_rapid_triage/app/app_providers.dart';
 import 'package:flutter_rapid_triage/core/constants/app_constants.dart';
 import 'package:flutter_rapid_triage/core/services/sync_service.dart';
+import 'package:flutter_rapid_triage/core/utils/sentinel.dart';
+import 'package:flutter_rapid_triage/features/triage/controllers/settings_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SyncState {
@@ -26,7 +28,7 @@ class SyncState {
     DateTime? lastSyncTime,
     int? syncedCount,
     int? failedCount,
-    String? error,
+    Object? error = unset,
     bool? isConnected,
   }) {
     return SyncState(
@@ -34,7 +36,7 @@ class SyncState {
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
       syncedCount: syncedCount ?? this.syncedCount,
       failedCount: failedCount ?? this.failedCount,
-      error: error ?? this.error,
+      error: error == unset ? this.error : error as String?,
       isConnected: isConnected ?? this.isConnected,
     );
   }
@@ -58,6 +60,9 @@ class SyncController extends Notifier<SyncState> {
       repository: repository,
       apiService: apiService,
       connectivityService: connectivityService,
+      isAutoSyncEnabled: () =>
+          ref.read(settingsControllerProvider).backgroundAutoSyncEnabled,
+      isWifiOnly: () => ref.read(settingsControllerProvider).syncOverWifiOnly,
     );
 
     _syncService!.startListening();
